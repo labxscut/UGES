@@ -26,6 +26,10 @@ methylation <- data[,c(2,42367:50833)]
 
 We evaluate three competitive hierarchical stepwise classification strategies: (B,H,LA,LB), (B,H,(LA,LB)) and ((B,H),(LA,LB)). Among these strategies, we use Lasso-Logistic regression method to construct different classifiers and compared their performance. In our dataset, there are **2065 samples** in total.
 
+![image](Figures/strategies.jpg)
+
+<center>Figure 1: Three competitive hierarchical stepwise classification strategies.</center>
+
 ### (B,H,LA,LB) strategy
 
 ```{R}
@@ -688,3 +692,6 @@ II_II_OVR(methylation[test,],me_II_II_pro[801:2065,])
 II_II_OVR(standard[test,-1],II_II_pro[801:2065,])
 ```
 
+![image](Figures/performance.jpg)
+
+<center>Figure 2: The performance of three strategies on the training, testing and combined sets, repectively.</center>
