@@ -2,6 +2,8 @@
 
 Here, we complete the UGES pipeline on a small sample dataset. Our starting point is based on pre-processed genomics/epigenomics/expression/clinical data that have been segmented by sample. We demonstrate how the data can be imported into R software for analysis.
 
+***
+
 ## Getting ready
 
 First we load the packages.
@@ -24,6 +26,8 @@ mutation <- data[,2:16772]
 cna <- data[,c(2,16773:42366)]
 methylation <- data[,c(2,42367:50833)]
 ```
+
+***
 
 ## Lasso-Logistic regression
 
@@ -699,6 +703,7 @@ II_II_OVR(standard[test,-1],II_II_pro[801:2065,])
 
 <center>Figure 2: The performance of three strategies on the training, testing and combined sets, repectively.</center>
 
+***
 
 ## Survival analysis
 
@@ -804,6 +809,8 @@ ggforest(cox2, main="Hazard ratio",
 ![image](Figures/multivariate.jpg)
 
 <center>Figure 4: The forest plot of UGES in the multivariate survival analysis.</center>
+
+***
 
 ## Difference test
 
