@@ -752,3 +752,56 @@ pairwise_survdiff(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE, data = survival)
 pairwise_survdiff(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE, data = UGES_survival)
 ```
 
+![image](Figures/univariate.jpg)
+
+<center>Figure 3: The pairwise comparison in the univariate survival analysis.</center>
+
+```{R}
+# redefine the subtypes as characters
+survival[which(survival[,2] == 1),2] <- 'Basal'
+survival[which(survival[,2] == 2),2] <- 'Her2'
+survival[which(survival[,2] == 3),2] <- 'LumA'
+survival[which(survival[,2] == 4),2] <- 'LumB'
+UGES_survival[which(PADNA_survival[,2] == 1),2] <- 'Basal'
+UGES_survival[which(PADNA_survival[,2] == 2),2] <- 'Her2'
+UGES_survival[which(PADNA_survival[,2] == 3),2] <- 'LumA'
+UGES_survival[which(PADNA_survival[,2] == 4),2] <- 'LumB'
+
+set.seed(1)
+ref <- c(sample(s1,249),sample(s2,249),sample(s3,249),sample(s4,249))    # balance the samples
+coxsurvival <- survival[ref,]
+coxsurvival[,2] <- 'Balance'
+coxsurvival <- rbind(coxsurvival,survival)
+coxsurvival[,2] <- as.factor(coxsurvival[,2])
+
+t1 <- which(UGES_survival[,2] == 'Basal')
+t2 <- which(UGES_survival[,2] == 'Her2')
+t3 <- which(UGES_survival[,2] == 'LumA')
+t4 <- which(UGES_survival[,2] == 'LumB')
+set.seed(1)
+ref <- c(sample(t1,323),sample(t2,323),sample(t3,323),sample(t4,323))
+coxUGES_survival <- PADNA_survival[ref,]
+coxUGES_survival[,2] <- 'Balanced'
+coxUGES_survival <- rbind(coxUGES_survival,UGES_survival)
+coxUGES_survival[,2] <- as.factor(coxUGES_survival[,2])
+
+survival[,2] <- as.factor(survival[,2])
+UGES_survival[,2] <- as.factor(UGES_survival[,2])
+
+# cox regression
+cox1 <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE + Age, data = coxsurvival)
+cox2 <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE + Age, data = coxUGES_survival)
+
+# generate forest plot
+ggforest(cox1, main="PAM50 subtypes - hazard ratio",
+         cpositions=c(0.02,0.22,0.4),
+         fontsize=1.2,refLabel="reference",noDigits=3)
+ggforest(cox2, main="Hazard ratio",
+         cpositions=c(0.02,0.22,0.4),
+         fontsize=1.2,refLabel="reference",noDigits=3)
+```
+
+![image](Figures/multivariate.jpg)
+
+<center>Figure 4: The forest plot of UGES in the multivariate survival analysis.</center>
+
