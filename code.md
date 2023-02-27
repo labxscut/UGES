@@ -828,7 +828,7 @@ cnalist <- unique(cnalist)
 melist <- unique(melist)
 
 # order by subtype
-ID <- subtype[,c(1,2)]               # Here, subtype dataframe contains the patient ID and their correesponding UGES subtypes
+ID <- UGES_survival[,c(1,2)]
 ID[,2] <- as.character(ID[,2])
 ID[which(ID[,2] == 'Basal'),2] <- 1
 ID[which(ID[,2] == 'Her2'),2] <- 2
@@ -839,7 +839,7 @@ ID <-ID[,1]
 
 # mutation chi-square test
 mutation_heatmap <- cbind(data[,1],mutation)
-mutation_heatmap[,2] <- as.factor(subtype[,2])
+mutation_heatmap[,2] <- UGES_survival[,2]
 mutation_heatmap <- (mutation_heatmap[order(mutation_heatmap[,2]),])[,-1:-2] %>% t()   # the same order
 rownames(mutation_heatmap) <- substring(rownames(mutation_heatmap),6,100)              # retain the gene name only
 mutation_heatmap <- mutation_heatmap[which(rownames(mutation_heatmap) %in% mulist),]   # intersect
@@ -867,7 +867,7 @@ for(i in 1:length(rownames(mutation_heatmap))){
 
 # CNA - Kruskal-Wallis H test
 cna_heatmap <- cbind(data[,1],cna)
-cna_heatmap[,2] <- subtype[,2]
+cna_heatmap[,2] <- UGES_survival[,2]
 cna_heatmap <- (cna_heatmap[order(cna_heatmap[,2]),])[,-1:-2] %>% t()        # the same order
 rownames(cna_heatmap) <- substring(rownames(cna_heatmap),5,100)              # retain the gene name only
 cna_heatmap <- cna_heatmap[which(rownames(cna_heatmap) %in% cnalist),]       # intersect
@@ -893,7 +893,7 @@ methylation_scale <- methylation[,-1]
 methylation_scale <- scale(rbind(scale(methylation_scale[1:931,]),scale(methylation_scale[932:2065,])))  # standardize
 methylation_scale <- cbind(methylation[,1],methylation_scale)
 methylation_heatmap <- cbind(data[,1],methylation_scale)
-methylation_heatmap[,2] <- subtype[,2]
+methylation_heatmap[,2] <- UGES_survival[,2]
 methylation_heatmap <- (methylation_heatmap[order(methylation_heatmap[,2]),])[,-1:-2] %>% t()       # the same order
 rownames(methylation_heatmap) <- substring(rownames(methylation_heatmap),4,100)                     # retain the gene name only
 methylation_heatmap <- methylation_heatmap[which(rownames(methylation_heatmap) %in% melist),]       # intersect
