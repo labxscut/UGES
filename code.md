@@ -805,3 +805,105 @@ ggforest(cox2, main="Hazard ratio",
 
 <center>Figure 4: The forest plot of UGES in the multivariate survival analysis.</center>
 
+## Difference test
+
+We performed different tests to identify the signature subtype-delineating alterations.
+
+```{R}
+# After outputing the coefficients of three sub-classifiers
+list <- c(coeff1[2:61,1],coeff2[2:36,1],coeff3[2:54,1])     #top 10% in each sub-classifier
+list <- as.data.frame(unlist(list %>% strsplit("_", fixed= T)))
+mulist <- list[which(list[,1] == "gene")+1,]
+cnalist <- list[which(list[,1] == "cna")+1,]
+melist <- list[which(list[,1] == "me")+1,]
+mulist <- unique(mulist)
+cnalist <- unique(cnalist)
+melist <- unique(melist)
+
+# order by subtype
+ID <- subtype[,c(1,2)]               # Here, subtype dataframe contains the patient ID and their correesponding UGES subtypes
+ID[,2] <- as.character(ID[,2])
+ID[which(ID[,2] == 'Basal'),2] <- 1
+ID[which(ID[,2] == 'Her2'),2] <- 2
+ID[which(ID[,2] == 'LumA'),2] <- 3
+ID[which(ID[,2] == 'LumB'),2] <- 4
+ID <- (ID[order(ID[,2]),])
+ID <-ID[,1]
+
+# mutation chi-square test
+mutation_heatmap <- cbind(data[,1],mutation)
+mutation_heatmap[,2] <- as.factor(subtype[,2])
+mutation_heatmap <- (mutation_heatmap[order(mutation_heatmap[,2]),])[,-1:-2] %>% t()   # the same order
+rownames(mutation_heatmap) <- substring(rownames(mutation_heatmap),6,100)              # retain the gene name only
+mutation_heatmap <- mutation_heatmap[which(rownames(mutation_heatmap) %in% mulist),]   # intersect
+row <- rownames(mutation_heatmap)
+mutation_heatmap <- as.data.frame(mutation_heatmap)
+mutation_heatmap <- as.data.frame(lapply(mutation_heatmap,as.numeric))
+rownames(mutation_heatmap) <- row
+mutation_heatmap <- as.matrix(mutation_heatmap)
+colnames(mutation_heatmap) <- ID
+
+mu_marker <- NULL           # restore the marker of mutation data
+for(i in 1:length(rownames(mutation_heatmap))){
+  weight <- c(length(which(mutation_heatmap[i,1:323] == 0)),length(which(mutation_heatmap[i,1:323] == 1)),
+              length(which(mutation_heatmap[i,324:647] == 0)),length(which(mutation_heatmap[i,324:647] == 1)),
+              length(which(mutation_heatmap[i,648:1482] == 0)),length(which(mutation_heatmap[i,648:1482] == 1)),
+              length(which(mutation_heatmap[i,1483:2065] == 0)),length(which(mutation_heatmap[i,1483:2065] == 1)))
+  data1 <- matrix(weight, nr = 2, nc = 4, dimnames = list(c("No","Yes"), c("Basal","Her2","LumA","LumB")))
+  if (min(data1) < 5){
+    if (fisher.test(data1)$p.value <0.01)
+      mu_marker <- rbind(mu_marker,rownames(mutation_heatmap)[i])
+  }
+  else if (chisq.test(data1)$p.value <0.01)
+    mu_marker <- rbind(mu_marker,rownames(mutation_heatmap)[i])
+}
+
+# CNA - Kruskal-Wallis H test
+cna_heatmap <- cbind(data[,1],cna)
+cna_heatmap[,2] <- subtype[,2]
+cna_heatmap <- (cna_heatmap[order(cna_heatmap[,2]),])[,-1:-2] %>% t()        # the same order
+rownames(cna_heatmap) <- substring(rownames(cna_heatmap),5,100)              # retain the gene name only
+cna_heatmap <- cna_heatmap[which(rownames(cna_heatmap) %in% cnalist),]       # intersect
+row <- rownames(cna_heatmap)
+cna_heatmap <- as.data.frame(cna_heatmap)
+cna_heatmap <- as.data.frame(lapply(cna_heatmap,as.numeric))
+rownames(cna_heatmap) <- row
+cna_heatmap <- as.matrix(cna_heatmap)
+colnames(cna_heatmap) <- ID
+
+library(coin)
+Type=c(rep("Basal",323),rep("Her2",324),rep("LumA",835),rep("LumB",583))
+
+cna_marker <- NULL            # restore the marker of CNA data
+for(i in 1:length(rownames(cna_heatmap))){
+  weight <- cna_heatmap[i,]
+  if (kruskal.test(weight, Type)$p.value < 0.01)
+    cna_marker <- rbind(cna_marker,rownames(cna_heatmap)[i])
+}
+
+# methylation - Welch ANOVA
+methylation_scale <- methylation[,-1]
+methylation_scale <- scale(rbind(scale(methylation_scale[1:931,]),scale(methylation_scale[932:2065,])))  # standardize
+methylation_scale <- cbind(methylation[,1],methylation_scale)
+methylation_heatmap <- cbind(data[,1],methylation_scale)
+methylation_heatmap[,2] <- subtype[,2]
+methylation_heatmap <- (methylation_heatmap[order(methylation_heatmap[,2]),])[,-1:-2] %>% t()       # the same order
+rownames(methylation_heatmap) <- substring(rownames(methylation_heatmap),4,100)                     # retain the gene name only
+methylation_heatmap <- methylation_heatmap[which(rownames(methylation_heatmap) %in% melist),]       # intersect
+row <- rownames(methylation_heatmap)
+methylation_heatmap <- as.data.frame(methylation_heatmap)
+methylation_heatmap <- as.data.frame(lapply(methylation_heatmap,as.numeric))
+rownames(methylation_heatmap) <- row
+methylation_heatmap <- as.matrix(methylation_heatmap)
+colnames(methylation_heatmap) <- ID
+
+Type=c(rep("Basal",323),rep("Her2",324),rep("LumA",835),rep("LumB",583))
+me_marker <- NULL            # restore the marker of methylation data
+for(i in 1:length(rownames(methylation_heatmap))){
+  weight <- methylation_heatmap[i,]
+  data1 <- data.frame(Type,weight)
+  data1$Type <- factor(data1$Type)
+  if (oneway.test(weight ~ Type, data = data1, var.equal = FALSE)$p.value <0.01)
+    me_marker <- rbind(me_marker,rownames(methylation_heatmap)[i])
+}
+```
