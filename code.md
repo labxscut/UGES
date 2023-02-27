@@ -4,29 +4,27 @@ Here, we complete the UGS-brca pipeline on a small sample dataset. Our starting 
 
 ## Getting ready
 
+First we load the packages.
+
 ```{R}
-###############################################
-##                 library                   ##
-###############################################
 library(glmnet)
 library(pROC)
-library(ggplot2)
-library(ggsci)
 library(dplyr)
+```
 
-###############################################
-##               original data               ##
-###############################################
-data <- read.csv("~/R/Breastcancer/newdata/cna_gene_methylation.csv")
-standard <- read.csv("~/R/Breastcancer/newdata/standard_cna_mu_me.csv")
+Then we import the example data, and divide it into four parts that denote combined data and three single-feature data, repectively.
+
+```{R}
+data <- read.csv("~/R/Breastcancer/newdata/cna_gene_methylation.csv")       # original combined data
+standard <- read.csv("~/R/Breastcancer/newdata/standard_cna_mu_me.csv")     # standardize combined data
 mutation <- data[,2:16772]
 cna <- data[,c(2,16773:42366)]
 methylation <- data[,c(2,42367:50833)]
-#data: original combined data
-#standard: original standard combined data
-#mutation, cna, methylation
+```
 
 
+
+```{R}
 ###############################################
 ##                 4-class                   ##
 ###############################################
