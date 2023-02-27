@@ -92,7 +92,7 @@ lasso_four <- function(x){
   return(result)
 }
 
-# divide the training and testing set, ensuring sample balance
+# divide the training and testing sets, ensuring sample balance
 set.seed(900)
 train <- c(sample(s1,200),sample(s2,200),sample(s3,200),sample(s4,200))   #sample balance
 test <- c(1:nrow(data))[-train]
@@ -178,6 +178,7 @@ IV_OVR_test <- function(x){
   return(roc)
 }
 
+# plot the ROC curves of the training and testing sets on different features of the (B,H,LA,LB) strategy
 par(mfrow = c(2,4))
 IV_OVR_train(mutation)
 IV_OVR_train(cna)
@@ -230,6 +231,7 @@ IV_OVR <- function(x){
   return(roc)
 }
 
+# plot the ROC curves of the mutation, CNA, methylation and combined data of the (B,H,LA,LB) strategy
 par(mfrow = c(2,4))
 IV_OVR(mutation)
 IV_OVR(cna)
@@ -239,3 +241,241 @@ IV_OVR(standard[,-1])
 
 ### (B,H,(LA,LB)) strategy
 
+```{R}
+# the first step
+data1 <- standard[,-1]
+data1[,1][which(data1[,1] == '4')]<- as.numeric(3)
+
+lasso_three <- function(x){
+  train_data <- x[train,]
+  test_data <- x[test,]
+  x.train <- as.matrix(sapply(data.frame(train_data[,c(2:ncol(train_data))]),as.numeric))
+  y.train <- as.matrix(sapply(data.frame(train_data[,1]),as.numeric))
+  x.test <- as.matrix(sapply(data.frame(test_data[,c(2:ncol(test_data))]),as.numeric))
+  y.test <- as.matrix(sapply(data.frame(test_data[,1]),as.numeric))
+  
+  #glmnet()
+  fit <- glmnet(x.train, y.train, family="multinomial", alpha=1)
+  
+  #cv.glmnet()
+  set.seed(1)
+  cv.fit <- cv.glmnet(x.train, y.train, family="multinomial", alpha=1, 
+                      type.measure = "class", nfolds = 10)
+  bestlam <- cv.fit$lambda.min
+  secondlam <- cv.fit$lambda.1se
+  
+  #training result
+  train_pred <- predict(fit, s = bestlam, newx = x.train, type="class")
+  train_pred_prob <- predict(cv.fit, s = bestlam, newx = x.train, type="response")
+  train_auc <- auc(multiclass.roc(train_data$SUBTYPE,as.numeric(train_pred)))
+  
+  #testing result
+  test_pred <- predict(fit, s = bestlam, newx = x.test, type="class")
+  test_pred_prob <- predict(cv.fit, s = bestlam, newx = x.test, type="response")
+  test_auc <- auc(multiclass.roc(test_data$SUBTYPE,as.numeric(test_pred)))
+  
+  bestmodel <- glmnet(x.train, y.train, alpha=1, lambda = bestlam)
+  coef <- coef(bestmodel)
+  coef <- as.data.frame(coef[,1])
+  coef <- cbind(rownames(coef),coef[,1])
+  coef <- as.data.frame(coef[-which(coef[,2] == 0),])
+  
+  result <- list(fit = fit, bestlam = bestlam, secondlam = secondlam,
+                 train_pred = train_pred, train_pred_prob = train_pred_prob, 
+                 train_auc = train_auc, test_pred = test_pred,
+                 test_pred_prob = test_pred_prob, test_auc = test_auc, coef = coef)
+  return(result)
+}
+
+# select the same training and testing sets
+set.seed(900)
+train <- c(sample(s1,200),sample(s2,200),sample(s3,200),sample(s4,200))   #sample balance
+test <- c(1:nrow(data))[-train]
+
+# compute the preditive probibility of three types in the first step
+III_pro <- function(x){
+  data3 <- x
+  data3[,1][which(data3[,1] == '4')]<- as.numeric(3)
+  train_data <- data3[train,]
+  test_data <- data3[test,]
+  III <- lasso_three(data3)
+  
+  pred_prob <- as.matrix(rbind(data.frame(III$train_pred_prob),data.frame(III$test_pred_prob)))
+  colnames(pred_prob) <- c(1,2,3)
+  rownames(pred_prob) <- c(train,test)
+  return(pred_prob)
+}
+
+mu_III_II_pro1 <- III_pro(mutation)
+cna_III_II_pro1 <- III_pro(cna)
+me_III_II_pro1 <- III_pro(methylation)
+III_II_pro1 <- III_pro(standard[,-1])
+
+
+# the second step
+data2 <- standard[,-1]
+data2 <- subset(data2, SUBTYPE=="3" | SUBTYPE=="4")
+
+s8 <- which(data2$SUBTYPE == "3")
+s9 <- which(data2$SUBTYPE == "4")
+
+# In the second step, the test data we use should be the sample data predicted as LumA and LumB in the first step.
+# select the same training and testing sets
+set.seed(900)
+train <- c(sample(s1,200),sample(s2,200),sample(s3,200),sample(s4,200))   #sample balance
+test <- c(1:nrow(data))[-train]
+
+# generate the new test data on the basis of the first step
+newtest <- function(x){
+  data <- x
+  data[,1][which(data[,1] == '4')]<- as.numeric(3)
+  train_data <- data[train,]
+  test_data <- data[test,]
+  III <- lasso_three(data)
+  newtest <- rbind(train_data[which((III$train_pred)[,1] == 3),], test_data[which((III$test_pred) == 3),])
+  newtest_data <- x[rownames(newtest),]
+  return(newtest_data)
+}
+#test_data <- newtest(mutation)
+#test_data <- newtest(cna)
+#test_data <- newtest(methylation)
+test_data <- newtest(standard[,-1])
+
+lasso_two <- function(x){
+  train_data <- x[train,]
+  x.train <- as.matrix(sapply(data.frame(train_data[,c(2:ncol(train_data))]),as.numeric))
+  y.train <- as.matrix(sapply(data.frame(train_data[,1]),as.numeric))
+  x.test <- as.matrix(sapply(data.frame(test_data[,c(2:ncol(test_data))]),as.numeric))
+  y.test <- as.matrix(sapply(data.frame(test_data[,1]),as.numeric))
+  
+  #glmnet()
+  fit <- glmnet(x.train, y.train, family="binomial", alpha=1)
+  
+  #cv.glmnet()
+  set.seed(1)
+  cv.fit <- cv.glmnet(x.train, y.train, family="binomial", alpha=1, 
+                      type.measure = "class", nfolds = 10)
+  bestlam <- cv.fit$lambda.min
+  secondlam <- cv.fit$lambda.1se
+  
+  #training result
+  train_pred <- predict(fit, s = bestlam, newx = x.train, type="class")
+  train_pred_prob <- predict(cv.fit, s = bestlam, newx = x.train, type="response")
+  train_auc <- auc(multiclass.roc(train_data$SUBTYPE,as.numeric(train_pred)))
+  
+  #testing result
+  test_pred <- predict(fit, s = bestlam, newx = x.test, type="class")
+  test_pred_prob <- predict(cv.fit, s = bestlam, newx = x.test, type="response")
+  test_auc <- auc(multiclass.roc(test_data$SUBTYPE,as.numeric(test_pred)))
+  
+  bestmodel <- glmnet(x.train, y.train, alpha=1, lambda = bestlam)
+  coef <- coef(bestmodel)
+  coef <- as.data.frame(coef[,1])
+  coef <- cbind(rownames(coef),coef[,1])
+  coef <- as.data.frame(coef[-which(coef[,2] == 0),])
+  
+  result <- list(fit = fit, bestlam = bestlam, secondlam = secondlam,
+                 train_pred = train_pred, train_pred_prob = train_pred_prob, 
+                 train_auc = train_auc, test_pred = test_pred,
+                 test_pred_prob = test_pred_prob, test_auc = test_auc, coef = coef)
+  return(result)
+}
+
+# divide the training and testing sets in the (LA,LB) classification problem
+set.seed(1000)
+train <- c(sample(s8,500),sample(s9,500))
+train_data <- data2[train,]
+
+#test_data <- mutation[rownames(mu_III_II_pro1),]
+#test_data <- cna[rownames(cna_III_II_pro1),]
+#test_data <- methylation[rownames(me_III_II_pro1),]
+test_data <- standard[rownames(III_II_pro1),-1]
+
+# compute the preditive probibility of three types in the second step
+II_pro <- function(x){
+  data <- x
+  data <- subset(data, SUBTYPE=="3" | SUBTYPE=="4")
+  train_data <- data[train,]
+  II <- lasso_two(data)
+  
+  pred_prob <- as.data.frame(II$test_pred_prob)
+  pred_prob[,2] <- 1
+  pred_prob[,2] <- pred_prob[,2]-pred_prob[,1]
+  pred_prob <- as.matrix(pred_prob)
+  colnames(pred_prob) <- c(4,3)
+  return(pred_prob)
+}
+#mu_III_II_pro2 <- II_pro(mutation)
+#cna_III_II_pro2 <- II_pro(cna)
+#me_III_II_pro2 <- II_pro(methylation)
+III_II_pro2 <- II_pro(standard[,-1])
+
+# compute the overall probibility of the (B,H,(LA,LB)) strategy
+mu_III_II_pro <- cbind(mu_III_II_pro1[,1:2], mu_III_II_pro1[,3]*mu_III_II_pro2[,2], mu_III_II_pro1[,3]*mu_III_II_pro2[,1])
+colnames(mu_III_II_pro) <- 1:4
+cna_III_II_pro <- cbind(cna_III_II_pro1[,1:2], cna_III_II_pro1[,3]*cna_III_II_pro2[,2], cna_III_II_pro1[,3]*cna_III_II_pro2[,1])
+colnames(cna_III_II_pro) <- 1:4
+me_III_II_pro <- cbind(me_III_II_pro1[,1:2], me_III_II_pro1[,3]*me_III_II_pro2[,2], me_III_II_pro1[,3]*me_III_II_pro2[,1])
+colnames(me_III_II_pro) <- 1:4
+III_II_pro <- cbind(III_II_pro1[,1:2], III_II_pro1[,3]*III_II_pro2[,2], III_II_pro1[,3]*III_II_pro2[,1])
+colnames(III_II_pro) <- 1:4
+
+# generate ROC curves of the (B,H,(LA,LB)) strategy
+III_OVR <- function(x,y){
+  label <- matrix(0,dim(x)[1],4)
+  label[,1:4] <- x$SUBTYPE
+  label[,1][which(label[,1] != 1)] <- 0
+  label[,2][which(label[,2] != 2)] <- 0
+  label[,2][which(label[,2] == 2)] <- 1
+  label[,3][which(label[,3] != 3)] <- 0
+  label[,3][which(label[,3] == 3)] <- 1
+  label[,4][which(label[,4] != 4)] <- 0
+  label[,4][which(label[,4] == 4)] <- 1
+  
+  roc1 <- roc(label[,1], y[,1], direction = "<")
+  roc2 <- roc(label[,2], y[,2], direction = "<")
+  roc3 <- roc(label[,3], y[,3], direction = "<")
+  roc4 <- roc(label[,4], y[,4], direction = "<")
+  averroc <- roc1
+  averroc$sensitivities <- (roc1$sensitivities + roc2$sensitivities + roc3$sensitivities + roc4$sensitivities)/4
+  averroc$specificities <- (roc1$specificities + roc2$specificities + roc3$specificities + roc4$specificities)/4
+  averroc$auc <- (roc1$auc + roc2$auc + roc3$auc + roc4$auc)/4
+  roc <- plot(roc1,col='1')          #select 0 as control, 1 as case
+  plot(roc2,col='2',add = TRUE)
+  plot(roc3,col='3',add = TRUE)
+  plot(roc4,col='4',add = TRUE)
+  plot(averroc,col='6',add = TRUE)
+  legend('bottomright',
+         legend = c(paste("Basal: ", round(auc(roc1),3), sep =""), 
+                    paste("Her2: ", round(auc(roc2),3), sep =""), 
+                    paste("LumA: ", round(auc(roc3),3), sep =""), 
+                    paste("LumB: ", round(auc(roc4),3), sep =""),
+                    paste("Overall: ", round(averroc$auc,3), sep ="")),
+         col = c("1", "2", "3", "4","6"), lty = 1)
+  
+  return(roc)
+}
+
+# plot the ROC curves of the mutation, CNA, methylation and combined data of the (B,H,(LA,LB)) strategy
+par(mfrow = c(2,4))
+III_OVR(standard[rownames(mu_III_II_pro1),-1], mu_III_II_pro)
+III_OVR(standard[rownames(cna_III_II_pro1),-1], cna_III_II_pro)
+III_OVR(standard[rownames(me_III_II_pro1),-1], me_III_II_pro)
+III_OVR(standard[rownames(III_II_pro1),-1], III_II_pro)
+
+# plot the ROC curves of the training and testing sets on different features of the (B,H,(LA,LB)) strategy
+set.seed(900)
+train <- c(sample(s1,200),sample(s2,200),sample(s3,200),sample(s4,200))   #sample balance
+test <- c(1:nrow(data))[-train]
+par(mfrow = c(2,4))
+III_OVR(standard[train,-1], mu_III_II_pro[1:800,])
+III_OVR(standard[train,-1], cna_III_II_pro[1:800,])
+III_OVR(standard[train,-1], me_III_II_pro[1:800,])
+III_OVR(standard[train,-1], III_II_pro[1:800,])
+III_OVR(standard[test,-1], mu_III_II_pro[801:2065,])
+III_OVR(standard[test,-1], cna_III_II_pro[801:2065,])
+III_OVR(standard[test,-1], me_III_II_pro[801:2065,])
+III_OVR(standard[test,-1], III_II_pro[801:2065,])
+```
+
+### ((B,H),(LA,LB)) strategy
