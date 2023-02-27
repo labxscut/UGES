@@ -31,7 +31,9 @@ methylation <- data[,c(2,42367:50833)]
 
 ## Lasso-Logistic regression
 
-We evaluate three competitive hierarchical stepwise classification strategies: (B,H,LA,LB), (B,H,(LA,LB)) and ((B,H),(LA,LB)). Among these strategies, we use Lasso-Logistic regression method to construct different classifiers and compared their performance. In our dataset, there are **2065 samples** in total.
+We evaluate three competitive hierarchical stepwise classification strategies: (B,H,LA,LB), (B,H,(LA,LB)) and ((B,H),(LA,LB)). Among these strategies, we use Lasso-Logistic regression method to construct different classifiers and compared their performance. 
+
+In our dataset, there are **2065 samples** in total, but there are only 20 samples in our example data. Thus, when reading the code, the reader should be aware that the corresponding numbers are not directly applicable.
 
 ![image](Figures/strategies.jpg)
 
