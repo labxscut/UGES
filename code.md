@@ -20,8 +20,8 @@ library(ggplot2)
 Then we import the example data, and divide it into four parts that denote combined data and three single-feature data, repectively.
 
 ```{R}
-data <- read.csv("~/R/Breastcancer/newdata/cna_gene_methylation.csv")       # original combined data
-standard <- read.csv("~/R/Breastcancer/newdata/standard_cna_mu_me.csv")     # standardize combined data
+data <- read.csv("UGES/Example_data/example_data.csv")       # original combined data
+standard <- read.csv("UGES/Example_data/example_standard_data.csv")     # standardize combined data
 mutation <- data[,2:16772]
 cna <- data[,c(2,16773:42366)]
 methylation <- data[,c(2,42367:50833)]
@@ -711,8 +711,8 @@ In order to explore the clinical relevance for UGES subtypes and compare that fo
 
 ```{R}
 # load the suvival data
-survival <- read.csv("data/survival.csv")
-UGES_survival <- read.csv("data/UGES_survival.csv")
+survival <- read.csv("UGES/Example_data/survival.csv")
+UGES_survival <- read.csv("UGES/Example_data/UGES_survival.csv")
 
 # KM-plot
 osfit1 <- survfit(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE, data = survival)
