@@ -22,17 +22,19 @@ cna <- data[,c(2,16773:42366)]
 methylation <- data[,c(2,42367:50833)]
 ```
 
+## Lasso-Logistic regression
 
+We evaluate three competitive hierarchical stepwise classification strategies: (B,H,LA,LB), (B,H,(LA,LB)) and ((B,H),(LA,LB)). Among these strategies, we use Lasso-Logistic regression method to construct different classifiers and compared their performance.
+
+### (B,H,LA,LB) strategy
 
 ```{R}
-###############################################
-##                 4-class                   ##
-###############################################
 s1 <- which(data$SUBTYPE == "1")
 s2 <- which(data$SUBTYPE == "2")
 s3 <- which(data$SUBTYPE == "3")
 s4 <- which(data$SUBTYPE == "4")
 
+# Lasso-Logistic regression
 lasso_four <- function(x){        
   train_data <- x[train,]
   test_data <- x[test,]
@@ -90,77 +92,12 @@ lasso_four <- function(x){
   return(result)
 }
 
-#After selecting the optimal random seed
+# divide the training and testing set, ensuring sample balance
 set.seed(900)
 train <- c(sample(s1,200),sample(s2,200),sample(s3,200),sample(s4,200))   #sample balance
 test <- c(1:nrow(data))[-train]
 
-IV_OVO_train <- function(x){
-  train_data <- x[train,]
-  test_data <- x[test,]
-  IV <- lasso_four(x)
-  IV$train_pred_prob <- as.matrix(data.frame(IV$train_pred_prob))
-  colnames(IV$train_pred_prob) <- c(1,2,3,4)
-  
-  train_roc <- multiclass.roc(train_data$SUBTYPE, IV$train_pred_prob, direction = ">")
-  roc <- plot(train_roc[["rocs"]][["1/2"]][[1]],col='1')          #select the former as control
-  plot(train_roc[["rocs"]][["1/3"]][[1]],col='2',add = TRUE)
-  plot(train_roc[["rocs"]][["1/4"]][[1]],col='3',add = TRUE)
-  plot(train_roc[["rocs"]][["2/3"]][[1]],col='4',add = TRUE)
-  plot(train_roc[["rocs"]][["2/4"]][[1]],col='5',add = TRUE)
-  plot(train_roc[["rocs"]][["3/4"]][[1]],col='6',add = TRUE)
-  legend('bottomright',
-         legend = c(paste("A vs B: ", round(auc(train_roc[["rocs"]][["1/2"]][[1]]),3), sep =""), 
-                    paste("A vs C: ", round(auc(train_roc[["rocs"]][["1/3"]][[1]]),3), sep =""), 
-                    paste("A vs D: ", round(auc(train_roc[["rocs"]][["1/4"]][[1]]),3), sep =""), 
-                    paste("B vs C: ", round(auc(train_roc[["rocs"]][["2/3"]][[1]]),3), sep =""), 
-                    paste("B vs D: ", round(auc(train_roc[["rocs"]][["2/4"]][[1]]),3), sep =""), 
-                    paste("C vs D: ", round(auc(train_roc[["rocs"]][["3/4"]][[1]]),3), sep ="")),
-         col = c("1", "2", "3", "4", "5", "6"), lty = 1)
-  legend('topright',
-         legend = c(paste("A-Basal"), paste("B-Her2"), paste("C-LumA"), paste("D-LumB")))
-  
-  return(roc)
-}
-
-IV_OVO_test <- function(x){
-  train_data <- x[train,]
-  test_data <- x[test,]
-  IV <- lasso_four(x)
-  IV$test_pred_prob <- as.matrix(data.frame(IV$test_pred_prob))
-  colnames(IV$test_pred_prob) <- c(1,2,3,4)
-  
-  test_roc <- multiclass.roc(test_data$SUBTYPE, IV$test_pred_prob, direction = ">")
-  roc <- plot(test_roc[["rocs"]][["1/2"]][[1]],col='1')          #select the former as control
-  plot(test_roc[["rocs"]][["1/3"]][[1]],col='2',add = TRUE)
-  plot(test_roc[["rocs"]][["1/4"]][[1]],col='3',add = TRUE)
-  plot(test_roc[["rocs"]][["2/3"]][[1]],col='4',add = TRUE)
-  plot(test_roc[["rocs"]][["2/4"]][[1]],col='5',add = TRUE)
-  plot(test_roc[["rocs"]][["3/4"]][[1]],col='6',add = TRUE)
-  legend('bottomright',
-         legend = c(paste("A vs B: ", round(auc(test_roc[["rocs"]][["1/2"]][[1]]),3), sep =""), 
-                    paste("A vs C: ", round(auc(test_roc[["rocs"]][["1/3"]][[1]]),3), sep =""), 
-                    paste("A vs D: ", round(auc(test_roc[["rocs"]][["1/4"]][[1]]),3), sep =""), 
-                    paste("B vs C: ", round(auc(test_roc[["rocs"]][["2/3"]][[1]]),3), sep =""), 
-                    paste("B vs D: ", round(auc(test_roc[["rocs"]][["2/4"]][[1]]),3), sep =""), 
-                    paste("C vs D: ", round(auc(test_roc[["rocs"]][["3/4"]][[1]]),3), sep ="")),
-         col = c("1", "2", "3", "4", "5", "6"), lty = 1)
-  legend('topright',
-         legend = c(paste("A-Basal"), paste("B-Her2"), paste("C-LumA"), paste("D-LumB")))
-  
-  return(roc)
-}
-
-par(mfrow = c(2,4))
-IV_OVO_train(mutation)
-IV_OVO_test(mutation)
-IV_OVO_train(cna)
-IV_OVO_test(cna)
-IV_OVO_train(methylation)
-IV_OVO_test(methylation)
-IV_OVO_train(standard[,-1])
-IV_OVO_test(standard[,-1])
-
+# generate ROC curves of the (B,H,LA,LB) strategy
 IV_OVR_train <- function(x){
   train_data <- x[train,]
   test_data <- x[test,]
@@ -251,36 +188,6 @@ IV_OVR_test(cna)
 IV_OVR_test(methylation)
 IV_OVR_test(standard[,-1])
 
-
-IV_OVO <- function(x){
-  train_data <- x[train,]
-  test_data <- x[test,]
-  IV <- lasso_four(x)
-  data <- rbind(train_data,test_data)
-  IV$pred_prob <- as.matrix(rbind(data.frame(IV$train_pred_prob),data.frame(IV$test_pred_prob)))
-  colnames(IV$pred_prob) <- c(1,2,3,4)
-  
-  all_roc <- multiclass.roc(data$SUBTYPE, IV$pred_prob, direction = ">")
-  roc <- plot(all_roc[["rocs"]][["1/2"]][[1]],col='1')          #select the former as control
-  plot(all_roc[["rocs"]][["1/3"]][[1]],col='2',add = TRUE)
-  plot(all_roc[["rocs"]][["1/4"]][[1]],col='3',add = TRUE)
-  plot(all_roc[["rocs"]][["2/3"]][[1]],col='4',add = TRUE)
-  plot(all_roc[["rocs"]][["2/4"]][[1]],col='5',add = TRUE)
-  plot(all_roc[["rocs"]][["3/4"]][[1]],col='6',add = TRUE)
-  legend('bottomright',
-         legend = c(paste("A vs B: ", round(auc(all_roc[["rocs"]][["1/2"]][[1]]),3), sep =""), 
-                    paste("A vs C: ", round(auc(all_roc[["rocs"]][["1/3"]][[1]]),3), sep =""), 
-                    paste("A vs D: ", round(auc(all_roc[["rocs"]][["1/4"]][[1]]),3), sep =""), 
-                    paste("B vs C: ", round(auc(all_roc[["rocs"]][["2/3"]][[1]]),3), sep =""), 
-                    paste("B vs D: ", round(auc(all_roc[["rocs"]][["2/4"]][[1]]),3), sep =""), 
-                    paste("C vs D: ", round(auc(all_roc[["rocs"]][["3/4"]][[1]]),3), sep ="")),
-         col = c("1", "2", "3", "4", "5", "6"), lty = 1)
-  legend('topright',
-         legend = c(paste("A-Basal"), paste("B-Her2"), paste("C-LumA"), paste("D-LumB")))
-  
-  return(roc)
-}
-
 IV_OVR <- function(x){
   train_data <- x[train,]
   test_data <- x[test,]
@@ -324,12 +231,11 @@ IV_OVR <- function(x){
 }
 
 par(mfrow = c(2,4))
-IV_OVO(standard[,-1])
-IV_OVR(standard[,-1])
-
-par(mfrow = c(2,4))
 IV_OVR(mutation)
 IV_OVR(cna)
 IV_OVR(methylation)
 IV_OVR(standard[,-1])
 ```
+
+### (B,H,(LA,LB)) strategy
+
