@@ -1,6 +1,6 @@
-# UGS-brca breast cancer intrinsic subtype classifier
+# UGES breast cancer intrinsic subtype classifier
 
-Here, we complete the UGS-brca pipeline on a small sample dataset. Our starting point is based on pre-processed genomics/epigenomics/expression/clinical data that have been segmented by sample. We demonstrate how the data can be imported into R software for analysis.
+Here, we complete the UGES pipeline on a small sample dataset. Our starting point is based on pre-processed genomics/epigenomics/expression/clinical data that have been segmented by sample. We demonstrate how the data can be imported into R software for analysis.
 
 ## Getting ready
 
@@ -10,6 +10,9 @@ First we load the packages.
 library(glmnet)
 library(pROC)
 library(dplyr)
+library(survival)
+library(survminer)
+library(ggplot2)
 ```
 
 Then we import the example data, and divide it into four parts that denote combined data and three single-feature data, repectively.
@@ -695,3 +698,57 @@ II_II_OVR(standard[test,-1],II_II_pro[801:2065,])
 ![image](Figures/performance.jpg)
 
 <center>Figure 2: The performance of three strategies on the training, testing and combined sets, repectively.</center>
+
+
+## Survival analysis
+
+In order to explore the clinical relevance for UGES subtypes and compare that for PAM50 subtypes, we conduct survival analysis.
+
+```{R}
+# load the suvival data
+survival <- read.csv("data/survival.csv")
+UGES_survival <- read.csv("data/UGES_survival.csv")
+
+# KM-plot
+osfit1 <- survfit(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE, data = survival)
+osfit2 <- survfit(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE, data = PADNA_survival)
+suros1 <- ggsurvplot(osfit1,
+                    pval = T,
+                    conf.int=T,
+                    pval.method = T,
+                    
+                    surv.median.line = 'hv',
+                    
+                    legend=c(0.9,0.85),
+                    
+                    legend.title='Original SUBTYPE',
+                    legend.labs=c('Basal','Her2','LumA','LumB'),
+                    
+                    xlab='Time(Months)',
+                    ylab='Survival probability',
+                    
+                    risk.table = TRUE)
+suros2 <- ggsurvplot(osfit2,
+                    pval = T,
+                    conf.int=T,
+                    pval.method = T,
+                    
+                    surv.median.line = 'hv',
+                    
+                    legend=c(0.9,0.85),
+                    
+                    legend.title='Original SUBTYPE',
+                    legend.labs=c('Basal','Her2','LumA','LumB'),
+                    
+                    xlab='Time(Months)',
+                    ylab='Survival probability',
+                    
+                    risk.table = TRUE)
+suros1
+suros2
+
+# pairwise comparison
+pairwise_survdiff(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE, data = survival)
+pairwise_survdiff(Surv(OS_MONTHS, OS_STATUS) ~ SUBTYPE, data = UGES_survival)
+```
+
