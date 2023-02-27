@@ -391,7 +391,7 @@ train_data <- data2[train,]
 #test_data <- methylation[rownames(me_III_II_pro1),]
 test_data <- standard[rownames(III_II_pro1),-1]
 
-# compute the preditive probibility of three types in the second step
+# compute the preditive probibility of two types in the second step
 II_pro <- function(x){
   data <- x
   data <- subset(data, SUBTYPE=="3" | SUBTYPE=="4")
@@ -479,4 +479,212 @@ III_OVR(standard[test,-1], III_II_pro[801:2065,])
 ```
 
 ### ((B,H),(LA,LB)) strategy
+
+```{R}
+# the first step
+data3 <- standard[,-1]
+data3[,1][which(data3[,1] == '2')]<- as.numeric(1)
+data3[,1][which(data3[,1] == '3')]<- as.numeric(2)
+data3[,1][which(data3[,1] == '4')]<- as.numeric(2)
+
+# divide the training and testing sets as before
+set.seed(900)
+train <- c(sample(s1,200),sample(s2,200),sample(s3,200),sample(s4,200))   #sample balance
+test <- c(1:nrow(data))[-train]
+train_data <- data3[train,]
+test_data <- data3[test,]
+
+# In the second step, the test data we use should be the sample data predicted as (B,H) or (LA,LB) in the first step.
+# generate the new test data on the basis of the first step
+newtest2 <- function(x){
+  data <- x
+  data[,1][which(data[,1] == '2')]<- as.numeric(1)
+  data[,1][which(data[,1] == '3')]<- as.numeric(2)
+  data[,1][which(data[,1] == '4')]<- as.numeric(2)
+  
+  II <- lasso_two(data)
+  bhtest <- rbind(train_data[which((II$train_pred)[,1] == 1),], test_data[which((II$test_pred) == 1),])
+  lltest <- rbind(train_data[which((II$train_pred)[,1] == 2),], test_data[which((II$test_pred) == 2),])
+  bhtest_data <- x[rownames(bhtest),]
+  lltest_data <- x[rownames(lltest),]
+  result <- list(bhtest_data = bhtest_data, lltest_data = lltest_data)
+  return(result)
+}
+
+# bhtest denotes the test data predicted as (B,H) in the first step, and lltest denotes the test data predicted as (LA,LB) in the first step
+mu_bhtest <- newtest2(mutation)$bhtest_data
+mu_lltest <- newtest2(mutation)$lltest_data
+
+cna_bhtest <- newtest2(cna)$bhtest_data
+cna_lltest <- newtest2(cna)$lltest_data
+
+me_bhtest <- newtest2(methylation)$bhtest_data
+me_lltest <- newtest2(methylation)$lltest_data
+
+bhtest <- newtest2(standard[,-1])$bhtest_data
+lltest <- newtest2(standard[,-1])$lltest_data
+
+# compute the preditive probibility of two types in the first step
+bh_ll_pro <- function(x){
+  data <- x
+  data[,1][which(data[,1] == '2')]<- as.numeric(1)
+  data[,1][which(data[,1] == '3')]<- as.numeric(2)
+  data[,1][which(data[,1] == '4')]<- as.numeric(2)
+  II <- lasso_two(data)
+  
+  pred_prob <- as.data.frame(rbind(data.frame(II$train_pred_prob),data.frame(II$test_pred_prob)))
+  pred_prob[,2] <- 1
+  pred_prob[,2] <- pred_prob[,2]-pred_prob[,1]
+  pred_prob <- as.matrix(pred_prob)
+  colnames(pred_prob) <- c(2,1)
+  rownames(pred_prob) <- c(train,test)
+  return(pred_prob)
+}
+mu_II_II_pro1 <- bh_ll_pro(mutation)
+cna_II_II_pro1 <- bh_ll_pro(cna)
+me_II_II_pro1 <- bh_ll_pro(methylation)
+II_II_pro1 <- bh_ll_pro(standard[,-1])
+
+
+# (B,H) classification in the second step
+data4 <- standard[,-1]
+data4 <- subset(data4, SUBTYPE=="1" | SUBTYPE=="2")
+
+s12 <- which(data4$SUBTYPE == "1")
+s13 <- which(data4$SUBTYPE == "2")
+
+# divide the training and testing sets in the (B,H) classification problem
+set.seed(1500)
+train <- c(sample(s12,200),sample(s13,200))
+train_data <- data4[train,]
+
+#test_data <- mutation[rownames(mu_II_II_pro1),]
+#test_data <- cna[rownames(cna_II_II_pro1),]
+#test_data <- methylation[rownames(me_II_II_pro1),]
+test_data <- standard[rownames(II_II_pro1),-1]
+
+# compute the preditive probibility of Basal and Her2 subtypes in the second step
+bh_pro <- function(x){
+  data <- x
+  data <- subset(data, SUBTYPE=="1" | SUBTYPE=="2")
+  
+  II <- lasso_two(data)
+  
+  pred_prob <- as.data.frame(II$test_pred_prob)
+  pred_prob[,2] <- 1
+  pred_prob[,2] <- pred_prob[,2]-pred_prob[,1]
+  pred_prob <- as.matrix(pred_prob)
+  colnames(pred_prob) <- c(2,1)
+  return(pred_prob)
+}
+#mu_II_II_pro2 <- bh_pro(mutation)
+#cna_II_II_pro2 <- bh_pro(cna)
+#me_II_II_pro2 <- bh_pro(methylation)
+II_II_pro2 <- bh_pro(standard[,-1])
+
+
+# (LA,LB) classification in the second step
+data2 <- standard[,-1]
+data2 <- subset(data2, SUBTYPE=="3" | SUBTYPE=="4")
+
+s8 <- which(data2$SUBTYPE == "3")
+s9 <- which(data2$SUBTYPE == "4")
+
+# divide the training and testing sets in the (LA,LB) classification problem as before
+set.seed(1000)
+train <- c(sample(s8,500),sample(s9,500))
+train_data <- data2[train,]
+
+#test_data <- mutation[rownames(mu_II_II_pro1),]
+#test_data <- cna[rownames(cna_II_II_pro1),]
+#test_data <- methylation[rownames(me_II_II_pro1),]
+test_data <- standard[rownames(II_II_pro1),-1]
+
+# compute the preditive probibility of LumA and LumB subtypes in the second step
+ll_pro <- function(x){
+  data <- x
+  data <- subset(data, SUBTYPE=="3" | SUBTYPE=="4")
+  
+  II <- lasso_two(data)
+  
+  pred_prob <- as.data.frame(II$test_pred_prob)
+  pred_prob[,2] <- 1
+  pred_prob[,2] <- pred_prob[,2]-pred_prob[,1]
+  pred_prob <- as.matrix(pred_prob)
+  colnames(pred_prob) <- c(4,3)
+  return(pred_prob)
+}
+#mu_II_II_pro3 <- ll_pro(mutation)
+#cna_II_II_pro3 <- ll_pro(cna)
+#me_II_II_pro3 <- ll_pro(methylation)
+II_II_pro3 <- ll_pro(standard[,-1])
+
+# compute the overall probibility of the ((B,H),(LA,LB)) strategy
+mu_II_II_pro <- cbind(mu_II_II_pro1[,2]*mu_II_II_pro2[,2], mu_II_II_pro1[,2]*mu_II_II_pro2[,1], 
+                      mu_II_II_pro1[,1]*mu_II_II_pro3[,2], mu_II_II_pro1[,1]*mu_II_II_pro3[,1])
+colnames(mu_II_II_pro) <- 1:4
+cna_II_II_pro <- cbind(cna_II_II_pro1[,2]*cna_II_II_pro2[,2], cna_II_II_pro1[,2]*cna_II_II_pro2[,1], 
+                       cna_II_II_pro1[,1]*cna_II_II_pro3[,2], cna_II_II_pro1[,1]*cna_II_II_pro3[,1])
+colnames(cna_II_II_pro) <- 1:4
+me_II_II_pro <- cbind(me_II_II_pro1[,2]*me_II_II_pro2[,2], me_II_II_pro1[,2]*me_II_II_pro2[,1], 
+                      me_II_II_pro1[,1]*me_II_II_pro3[,2], me_II_II_pro1[,1]*me_II_II_pro3[,1])
+colnames(me_II_II_pro) <- 1:4
+II_II_pro <- cbind(II_II_pro1[,2]*II_II_pro2[,2], II_II_pro1[,2]*II_II_pro2[,1], 
+                   II_II_pro1[,1]*II_II_pro3[,2], II_II_pro1[,1]*II_II_pro3[,1])
+colnames(II_II_pro) <- 1:4
+
+# generate ROC curves of the (B,H,(LA,LB)) strategy
+II_II_OVR <- function(x,y){
+  label <- matrix(0,dim(x)[1],4)
+  label[,1:4] <- x$SUBTYPE
+  label[,1][which(label[,1] != 1)] <- 0
+  label[,2][which(label[,2] != 2)] <- 0
+  label[,2][which(label[,2] == 2)] <- 1
+  label[,3][which(label[,3] != 3)] <- 0
+  label[,3][which(label[,3] == 3)] <- 1
+  label[,4][which(label[,4] != 4)] <- 0
+  label[,4][which(label[,4] == 4)] <- 1
+  
+  roc1 <- roc(label[,1], y[,1], direction = "<")
+  roc2 <- roc(label[,2], y[,2], direction = "<")
+  roc3 <- roc(label[,3], y[,3], direction = "<")
+  roc4 <- roc(label[,4], y[,4], direction = "<")
+  averroc <- roc1
+  averroc$sensitivities <- (roc1$sensitivities + roc2$sensitivities + roc3$sensitivities + roc4$sensitivities)/4
+  averroc$specificities <- (roc1$specificities + roc2$specificities + roc3$specificities + roc4$specificities)/4
+  averroc$auc <- (roc1$auc + roc2$auc + roc3$auc + roc4$auc)/4
+  roc <- plot(roc1,col='1')          #select 0 as control, 1 as case
+  plot(roc2,col='2',add = TRUE)
+  plot(roc3,col='3',add = TRUE)
+  plot(roc4,col='4',add = TRUE)
+  plot(averroc,col='6',add = TRUE)
+  legend('bottomright',
+         legend = c(paste("Basal: ", round(auc(roc1),3), sep =""), 
+                    paste("Her2: ", round(auc(roc2),3), sep =""), 
+                    paste("LumA: ", round(auc(roc3),3), sep =""), 
+                    paste("LumB: ", round(auc(roc4),3), sep =""),
+                    paste("Overall: ", round(averroc$auc,3), sep ="")),
+         col = c("1", "2", "3", "4","6"), lty = 1)
+  
+  return(roc)
+}
+
+# plot the ROC curves of the mutation, CNA, methylation and combined data of the ((B,H),(LA,LB)) strategy
+par(mfrow = c(2,4))
+II_II_OVR(mutation[rownames(mu_II_II_pro1),],mu_II_II_pro)
+II_II_OVR(cna[rownames(cna_II_II_pro1),],cna_II_II_pro)
+II_II_OVR(methylation[rownames(me_II_II_pro1),],me_II_II_pro)
+II_II_OVR(standard[rownames(II_II_pro1),-1],II_II_pro)
+
+# plot the ROC curves of the training and testing sets on different features of the ((B,H),(LA,LB)) strategy
+par(mfrow = c(2,4))
+II_II_OVR(mutation[train,],mu_II_II_pro[1:800,])
+II_II_OVR(cna[train,],cna_II_II_pro[1:800,])
+II_II_OVR(methylation[train,],me_II_II_pro[1:800,])
+II_II_OVR(standard[train,-1],II_II_pro[1:800,])
+II_II_OVR(mutation[test,],mu_II_II_pro[801:2065,])
+II_II_OVR(cna[test,],cna_II_II_pro[801:2065,])
+II_II_OVR(methylation[test,],me_II_II_pro[801:2065,])
+II_II_OVR(standard[test,-1],II_II_pro[801:2065,])
+```
 
