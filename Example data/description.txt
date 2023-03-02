@@ -1,1 +1,5 @@
 The example data used in our study.
+
+The original dataset are available in two public datasets of cBioportal platform (http://www.cbioportal.org/):
+· Breast Cancer (METABRIC, Nature 2012 & Nat Commun 2016)
+· Breast Invasive Carcinoma (TCGA, PanCancer Atlas)
