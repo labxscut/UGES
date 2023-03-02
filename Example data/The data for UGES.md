@@ -14,3 +14,4 @@ and two public datasets of cBioportal platform (http://www.cbioportal.org/):
 
 ## Brief description
 
+The dataset ② and ③ are two large-scale multi-omics datasets of breast cancer patients, containing the genetic, epigenetic, expression and clinical data, etc. The dataset ① actually is the DNA methylation data of samples included in dataset ③, as the supplementary data. 
