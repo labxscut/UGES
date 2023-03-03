@@ -18,8 +18,14 @@ The dataset ② and ③ are two large-scale multi-omics datasets of breast cance
 
 In UGES, we used these large-scale multi-omics data to do the analysis on breast cancer intrinsic subtype classification, survival analysis and so on. They provideed us the sufficient condition to do the analysis.
 
-## Author list for the dataset
-
 ## Data types
 
+In UGES, the data are:
+
+· The alterations of multi-omics data, including mutation, copy number abberation, methylation alterations, etc.
+
+· The clinical data of samples, including intrinsic subtype, age, sex, patient ID, etc.
+
 ## Estimate of dataset size
+
+After pre-processing, we have a few GB size of data for 2065 breast cancer patients.
