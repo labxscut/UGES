@@ -2,9 +2,11 @@
 
 ## Introduction
 
-This repository is code dedicated to the testing data of UGES, a classifier which have good performance in identifying the intrinsic subtypes of breast cancer. Leveraging two large-scale (The Cancer Genome Atlas, or TCGA and METABRIC cohorts, total n=2065), multi-omics (mutation, CNA, methylation and expression) datasets, we developed a DNA-level predictive model, which we termed UGS-brca (Unified Genetic and Epigenetic Subtyping for breast cancer) using hierarchical stepwise learning method.
+This repository is code dedicated to the testing data of UGES, a classifier which have good performance in identifying the intrinsic subtypes of breast cancer. Leveraging two large-scale (The Cancer Genome Atlas, or TCGA and METABRIC cohorts, total n=2065), multi-omics (mutation, CNA, methylation and expression) datasets, we developed a DNA-level predictive model, which we termed UGES (Unified Genetic and Epigenetic Subtyping for breast cancer) using hierarchical stepwise learning method.
 
 The required dependency is R.
+
+The code is contained in <code.md>; the data details are shown in <The data for UGES.md>.
 
 ![image](Figures/design.jpg)
 
