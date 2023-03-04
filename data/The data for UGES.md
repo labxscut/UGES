@@ -1,8 +1,6 @@
 # The data for UGES
 
-The example pre-processing data are given in <https://github.com/labxscut/UGES/Example data>.
-
-Due to the file size limitation, we can not upload the original data, which are available in TCGA (https://gdc.cancer.gov/about-data/publications/pancanatlas):
+The original data are available in TCGA (https://gdc.cancer.gov/about-data/publications/pancanatlas):
 
 · ① DNA Methylation (450K Only) - jhu-usc.edu_PANCAN_HumanMethylation450.betaValue_whitelisted.tsv,
 
@@ -12,11 +10,13 @@ and two public datasets of cBioportal platform (http://www.cbioportal.org/):
 
 · ③ Breast Invasive Carcinoma (TCGA, PanCancer Atlas)(https://www.cbioportal.org/study/summary?id=brca_tcga_pan_can_atlas_2018)
 
+The datasets downloaded from cbioportal and the pre-processing data are restored in <https://github.com/labxscut/UGES> or in the latest release named <UGES> at <https://github.com/labxscut/UGES>. The readers can download them directly.
+
 ## Brief description for the data and their potential use
 
 The dataset ② and ③ are two large-scale multi-omics datasets of breast cancer patients, containing the genetic, epigenetic, expression and clinical data, etc. The dataset ① actually is the DNA methylation data of samples included in dataset ③, as the supplementary data. 
 
-In UGES, we used these large-scale multi-omics data to do the analysis on breast cancer intrinsic subtype classification, survival analysis and so on. They provideed us the sufficient condition to do the analysis.
+In UGES, we used these large-scale multi-omics data as the original data. <Combined_data.csv> and <Standard_combined_data.csv> are the pro-precessing data. <survival.csv> and <UGES_survival.csv> are data used in survival analysis. They provideed us the sufficient condition to do the analysis.
 
 ## Data types
 
