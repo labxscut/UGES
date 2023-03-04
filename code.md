@@ -20,8 +20,8 @@ library(ggplot2)
 Then we import the example data, and divide it into four parts that denote combined data and three single-feature data, repectively.
 
 ```{R}
-data <- read.csv("UGES/Example_data/example_data.csv")       # original combined data
-standard <- read.csv("UGES/Example_data/example_standard_data.csv")     # standardize combined data
+data <- read.csv("UGES/Example_data/data.csv")       # original combined data
+standard <- read.csv("UGES/Example_data/standard_data.csv")     # standardize combined data
 mutation <- data[,2:16772]
 cna <- data[,c(2,16773:42366)]
 methylation <- data[,c(2,42367:50833)]
