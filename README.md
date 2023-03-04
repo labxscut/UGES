@@ -6,7 +6,7 @@ This repository is code dedicated to the testing data of UGES, a classifier whic
 
 The required dependency is R.
 
-The code is contained in <code.md>; the data details are shown in <The data for UGES.md>.
+The code is contained in <code.md>; the data details are shown in <The_data_for_UGES.md>.
 
 ![image](Figures/design.jpg)
 
