@@ -916,8 +916,10 @@ for(i in 1:length(rownames(methylation_heatmap))){
     me_marker <- rbind(me_marker,rownames(methylation_heatmap)[i])
 }
 
-#Add
-### TCGA(train) & Metabric(test)
+***
+## TCGA(train) & Metabric(test)
+```{R}
+
 data12 <- standard[,-1]
 data12[,1][which(data5[,1] == '2')]<- as.numeric(2)
 data12[,1][which(data5[,1] == '3')]<- as.numeric(2)
