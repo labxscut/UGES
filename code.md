@@ -915,7 +915,7 @@ for(i in 1:length(rownames(methylation_heatmap))){
   if (oneway.test(weight ~ Type, data = data1, var.equal = FALSE)$p.value <0.01)
     me_marker <- rbind(me_marker,rownames(methylation_heatmap)[i])
 }
-```
+
 #Add
 ### TCGA(train) & Metabric(test)
 data12 <- standard[,-1]
@@ -1100,3 +1100,5 @@ par(mfrow = c(2, 4))
 II_II_II_OVR(standard[train3,-1], Ttrain_II_II_II_pro[1:312,])
 II_II_II_OVR(standard[test3,-1], Ttrain_II_II_II_pro[313:2065,])
 
+
+```
