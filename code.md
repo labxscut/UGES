@@ -916,3 +916,187 @@ for(i in 1:length(rownames(methylation_heatmap))){
     me_marker <- rbind(me_marker,rownames(methylation_heatmap)[i])
 }
 ```
+#Add
+### TCGA(train) & Metabric(test)
+data12 <- standard[,-1]
+data12[,1][which(data5[,1] == '2')]<- as.numeric(2)
+data12[,1][which(data5[,1] == '3')]<- as.numeric(2)
+data12[,1][which(data5[,1] == '4')]<- as.numeric(2)
+
+s111 <- which(standard$SUBTYPE == "1" & (1:nrow(standard) >= 1 & 1:nrow(standard) <= 931))
+s222<- which(standard$SUBTYPE == "2" & (1:nrow(standard) >= 1 & 1:nrow(standard) <= 931))
+s333 <- which(standard$SUBTYPE == "3" & (1:nrow(standard) >= 1 & 1:nrow(standard) <= 931))
+s444 <- which(standard$SUBTYPE == "4" & (1:nrow(standard) >= 1 & 1:nrow(standard) <= 931))
+
+# divide the training and testing sets as before
+set.seed(900)
+train <- c(sample(s111,78),sample(s222,78),sample(s333,78),sample(s444,78))   #sample balance
+test <- c(1:nrow(data))[-train]
+train_data <- data12[train,]
+test_data <- data12[test,]
+train3<-train
+test3<-test
+
+#Calculate the predicted probabilities for the two classes.
+omi_I_pro <- function(x){
+  data <- x
+  data[,1][which(data[,1] == '2')] <- as.numeric(2)
+  data[,1][which(data[,1] == '3')] <- as.numeric(2)
+  data[,1][which(data[,1] == '4')] <- as.numeric(2)
+  I <- lasso_two(data)
+  
+  pred_prob <- as.data.frame(rbind(data.frame(I$train_pred_prob), data.frame(I$test_pred_prob)))
+  pred_prob[,2] <- 1
+  pred_prob[,2] <- pred_prob[,2] - pred_prob[,1]
+  pred_prob <- as.matrix(pred_prob)
+  colnames(pred_prob) <- c(2, 1)
+  rownames(pred_prob) <- c(train, test)
+  return(pred_prob)
+}
+
+# Step 1: Calculate the predicted probabilities for the data.
+#Ttrain_mu_II_II_II_pro1 <- omi_I_pro(mutation)
+#Ttrain_cna_II_II_II_pro1 <- omi_I_pro(cna)
+#Ttrain_me_II_II_II_pro1 <- omi_I_pro(methylation)
+Ttrain_II_II_II_pro1 <- omi_I_pro(standard[,-1])
+
+# Step 2: Split the training and test sets in the (H, (LA, LB)) classification problem.
+# Obtain the samples with indices from 932 to 2065 in the original data.
+original_indices <- 1:931
+
+data13 <- standard[,-1]
+data13 <- subset(data13, SUBTYPE == "2" | SUBTYPE == "3" | SUBTYPE == "4")
+s25 <- which(data13$SUBTYPE == "2" & rownames(data13) %in% original_indices)
+s26 <- which(data13$SUBTYPE == "3" & rownames(data13) %in% original_indices)
+s27 <- which(data13$SUBTYPE == "4" & rownames(data13) %in% original_indices)
+
+# divide the training and testing sets in the (H,(LA,LB)) classification problem
+set.seed(1500)
+train <- c(sample(s25,78),sample(s26,78),sample(s27,78))
+train_data <- data13[train,]
+
+#test_data <- mutation[rownames(Ttrain_mu_II_II_II_pro1),]
+#test_data <- cna[rownames(Ttrain_cna_II_II_II_pro1),]
+#test_data <- methylation[rownames(Ttrain_me_II_II_II_pro1),]
+test_data <- standard[rownames(Ttrain_II_II_II_pro1),-1]
+
+# Calculate the predicted probabilities for Step 2.
+omi_II_pro <- function(x){
+  data <- x
+  data <- subset(data, SUBTYPE == "2" | SUBTYPE == "3" | SUBTYPE == "4")
+  data[,1][which(data[,1] == '2')] <- as.numeric(1)
+  data[,1][which(data[,1] == '3')] <- as.numeric(2)
+  data[,1][which(data[,1] == '4')] <- as.numeric(2)
+  
+  II <- lasso_two(data)
+  
+  pred_prob <- as.data.frame(II$test_pred_prob)
+  pred_prob[,2] <- 1
+  pred_prob[,2] <- pred_prob[,2] - pred_prob[,1]
+  pred_prob <- as.matrix(pred_prob)
+  colnames(pred_prob) <- c(2, 1)
+  return(pred_prob)
+}
+
+# Calculate the prediction probabilities for the methylation data(step 2)
+#Ttrain_mu_II_II_II_pro2 <- omi_II_pro(mutation)
+#Ttrain_cna_II_II_II_pro2 <- omi_II_pro(cna)
+#Ttrain_me_II_II_II_pro2 <- omi_II_pro(methylation)
+Ttrain_II_II_II_pro2 <- omi_II_pro(standard[,-1])
+
+
+# Step 3: Split the training and test sets for the (LA, LB) classification problem.
+data14 <- standard[,-1]
+data14 <- subset(data14, SUBTYPE == "3" | SUBTYPE == "4")
+
+s28 <- which(data14$SUBTYPE == "3"& rownames(data14) %in% original_indices)
+s29 <- which(data14$SUBTYPE == "4"& rownames(data14) %in% original_indices)
+
+# divide the training and testing sets in the (LA,LB) classification problem as before
+set.seed(1000)
+train <- c(sample(s28,197),sample(s29,197))
+train_data <- data14[train,]
+
+#test_data <- mutation[rownames(Ttrain_mu_II_II_II_pro1),]
+#test_data <- cna[rownames(Ttrain_cna_II_II_II_pro1),]
+#test_data <- methylation[rownames(Ttrain_me_II_II_II_pro1),]
+test_data <- standard[rownames(Ttrain_II_II_II_pro1),-1]
+
+
+# Calculate the predicted probabilities for Step 3.
+omi_III_pro <- function(x){
+  data <- x
+  data <- subset(data, SUBTYPE == "3" | SUBTYPE == "4")
+  
+  III <- lasso_two(data)
+  
+  pred_prob <- as.data.frame(III$test_pred_prob)
+  pred_prob[,2] <- 1
+  pred_prob[,2] <- pred_prob[,2] - pred_prob[,1]
+  pred_prob <- as.matrix(pred_prob)
+  colnames(pred_prob) <- c(4, 3)
+  return(pred_prob)
+}
+
+#Ttrain_mu_II_II_II_pro3 <- omi_III_pro(mutation)
+#Ttrain_cna_II_II_II_pro3 <- omi_III_pro(cna)
+#Ttrain_me_II_II_II_pro3 <- omi_III_pro(methylation)
+Ttrain_II_II_II_pro3 <- omi_III_pro(standard[,-1])
+
+#compute the overall probibility of the (B,(H,(LA,LB))) strategy
+#Ttrain_mu_II_II_II_pro <- cbind(Ttrain_mu_II_II_II_pro1[,2], Ttrain_mu_II_II_II_pro1[,1]*Ttrain_mu_II_II_II_pro2[,2], Ttrain_mu_II_II_II_pro1[,1]*Ttrain_mu_II_II_II_pro2[,1]*Ttrain_mu_II_II_II_pro3[,2], Ttrain_mu_II_II_II_pro1[,1]*Ttrain_mu_II_II_II_pro2[,1]*Ttrain_mu_II_II_II_pro3[,1])
+#colnames(Ttrain_mu_II_II_II_pro) <- 1:4
+#Ttrain_cna_II_II_II_pro <- cbind(Ttrain_cna_II_II_II_pro1[,2], Ttrain_cna_II_II_II_pro1[,1]*Ttrain_cna_II_II_II_pro2[,2], Ttrain_cna_II_II_II_pro1[,1]*Ttrain_cna_II_II_II_pro2[,1]*Ttrain_cna_II_II_II_pro3[,2], Ttrain_cna_II_II_II_pro1[,1]*Ttrain_cna_II_II_II_pro2[,1]*Ttrain_cna_II_II_II_pro3[,1])
+#colnames(Ttrain_cna_II_II_II_pro) <- 1:4
+#Ttrain_me_II_II_II_pro <- cbind(Ttrain_me_II_II_II_pro1[,2], Ttrain_me_II_II_II_pro1[,1]*Ttrain_me_II_II_II_pro2[,2], Ttrain_me_II_II_II_pro1[,1]*Ttrain_me_II_II_II_pro2[,1]*Ttrain_me_II_II_II_pro3[,2], Ttrain_me_II_II_II_pro1[,1]*Ttrain_me_II_II_II_pro2[,1]*Ttrain_me_II_II_II_pro3[,1])
+#colnames(Ttrain_me_II_II_II_pro) <- 1:4
+Ttrain_II_II_II_pro <- cbind(Ttrain_II_II_II_pro1[,2], Ttrain_II_II_II_pro1[,1]*Ttrain_II_II_II_pro2[,2], Ttrain_II_II_II_pro1[,1]*Ttrain_II_II_II_pro2[,1]*Ttrain_II_II_II_pro3[,2], Ttrain_II_II_II_pro1[,1]*Ttrain_II_II_II_pro2[,1]*Ttrain_II_II_II_pro3[,1])
+colnames(Ttrain_II_II_II_pro) <- 1:4
+
+# Generate the ROC curve for the (B, (H, (LA, LB))) strategy.
+II_II_II_OVR <- function(x, y){
+  label <- matrix(0, dim(x)[1], 4)
+  label[,1:4] <- x$SUBTYPE
+  label[,1][which(label[,1] != 1)] <- 0
+  label[,2][which(label[,2] != 2)] <- 0
+  label[,2][which(label[,2] == 2)] <- 1
+  label[,3][which(label[,3] != 3)] <- 0
+  label[,3][which(label[,3] == 3)] <- 1
+  label[,4][which(label[,4] != 4)] <- 0
+  label[,4][which(label[,4] == 4)] <- 1
+  
+  roc1 <- roc(label[,1], y[,1], direction = "<")
+  roc2 <- roc(label[,2], y[,2], direction = "<")
+  roc3 <- roc(label[,3], y[,3], direction = "<")
+  roc4 <- roc(label[,4], y[,4], direction = "<")
+  averroc <- roc1
+  averroc$sensitivities <- (roc1$sensitivities + roc2$sensitivities + roc3$sensitivities + roc4$sensitivities) / 4
+  averroc$specificities <- (roc1$specificities + roc2$specificities + roc3$specificities + roc4$specificities) / 4
+  averroc$auc <- (roc1$auc + roc2$auc + roc3$auc + roc4$auc) / 4
+  roc <- plot(roc1, col='1')  
+  plot(roc2, col='2', add = TRUE)
+  plot(roc3, col='3', add = TRUE)
+  plot(roc4, col='4', add = TRUE)
+  plot(averroc, col='6', add = TRUE)
+  legend('bottomright',
+         legend = c(paste("Basal: ", round(auc(roc1), 3), sep =""), 
+                    paste("Her2: ", round(auc(roc2), 3), sep =""), 
+                    paste("LumA: ", round(auc(roc3), 3), sep =""), 
+                    paste("LumB: ", round(auc(roc4), 3), sep =""),
+                    paste("Overall: ", round(averroc$auc, 3), sep ="")),
+         col = c("1", "2", "3", "4", "6"), lty = 1)
+  
+  return(roc)
+}
+
+# Plot the ROC curves for the training and test sets of the (B, (H, (LA, LB))) strategy under different features.
+par(mfrow = c(2, 4))
+#II_II_II_OVR(methylation[train3,], Ttrain_me_II_II_II_pro[1:931,])
+#II_II_II_OVR(methylation[test3,], Ttrain_me_II_II_II_pro[932:2065,])
+#II_II_II_OVR(cna[train3,], Ttrain_cna_II_II_II_pro[1:931,])
+#II_II_II_OVR(cna[test3,], Ttrain_cna_II_II_II_pro[932:2065,])
+#II_II_II_OVR(mutation[train3,], Ttrain_mu_II_II_II_pro[1:931,])
+#II_II_II_OVR(mutation[test3,], Ttrain_mu_II_II_II_pro[932:2065,])
+II_II_II_OVR(standard[train3,-1], Ttrain_II_II_II_pro[1:312,])
+II_II_II_OVR(standard[test3,-1], Ttrain_II_II_II_pro[313:2065,])
+
