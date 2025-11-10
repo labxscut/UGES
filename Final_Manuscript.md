@@ -223,65 +223,32 @@ framework (see **Algorithm 1**).
  Algorithm 1: the UGES training framework                              
 -------------------------------------------------------------------------
 **Input:**
+
 $$
 \mathbf{X_{\text{train}}} = (X_1, X_2, \dots, X_n),\quad
 \mathbf{Y_{\text{train}}} = (Y_1, Y_2, \dots, Y_n),\quad
 k = 4
 $$
+
 The subtype hierarchy: T=\{\}.
+
 **Repeat until k=1:**
 
-| $\mathb                                                               |
-| f{X}_{\mathbf{train}}\mathbf{= (}\mathbf{X}_{\mathbf{1}}\mathbf{,}\ma |
-| thbf{X}_{\mathbf{2}}\mathbf{\ldots}\mathbf{X}_{\mathbf{n}}\mathbf{)}$ |
-| &                                                                     |
-| $\mathbf{Y}_{\mathbf{train                                            |
-| }}\mathbf{=}\left( \mathbf{Y}_{\mathbf{1}}\mathbf{,}\mathbf{Y}_{\math |
-| bf{2}}\mathbf{\ldots}\mathbf{Y}_{\mathbf{n}} \right)\mathbf{;k = 4}$; |
-|                                                                       |
-| The subtype hierarchy: *T* ={}.                                       |
-+-----------------------------------------------------------------------+
-| Repeat until *k=1*:                                                   |
-|                                                                       |
-| 1\. Train by cross-validation $\mathbf{k}$ One-vs-Rest classifiers    |
-|                                                                       |
-| ${{\overline{\mathbf{f}}}_{\mathbf{1}}}^{\mathbf{(k)}}\mat            |
-| hbf{,\ \ldots,}{{\overline{\mathbf{f}}}_{\mathbf{k}}}^{\mathbf{(k)}}$ |
-| using Lasso-Logistic regression.                                      |
-|                                                                       |
-| 2\. Compute the pairwise classification error, the confusion matrix   |
-| ${\overline{\mathbf{C}}}_{\mathbf{ij}}$ and the symmetrized confusion |
-| matrix $\mathbf{A}$:                                                  |
-|                                                                       |
-| $$\mathbf{}\mathbf{\ }\mathbf{                                        |
-| = \ 1\ \backslash*\ roman}\mathbf{\ }\mathbf{}\mathbf{i}\mathbf{}\mat |
-| hbf{.\ }{\overline{\mathbf{C}}}_{\mathbf{ij}}\mathbf{=}\left| \left\{ |
-|  \left( \mathbf{x}\mathbf{,}\mathbf{y}_{\mathbf{i}} \right)\mathbf{\i |
-| n}\mathbf{X}_{\mathbf{test}}\mathbf{:}\mathbf{argmax}_{\mathbf{r}}\ma |
-| thbf{\ }{{\overline{\mathbf{f}}}_{\mathbf{r}}}^{\left( \mathbf{k} \ri |
-| ght)}\left( \mathbf{x} \right)\mathbf{=}\mathbf{j} \right\} \right|$$ |
-|                                                                       |
-| $$\mathbf{}\mathbf{\ }\mathbf{                                        |
-| = \ 2\ \backslash*\ roman}\mathbf{\ }\mathbf{}\mathbf{ii}\mathbf{}\ma |
-| thbf{.\ A}\mathbf{=}\frac{\mathbf{1}}{\mathbf{2}}\mathbf{(}\overline{ |
-| \mathbf{C}}\mathbf{+}{\overline{\mathbf{C}}}^{\mathbf{T}}\mathbf{)}$$ |
-|                                                                       |
-| 3\. Merge the two most similar subtypes to an internal subtype *c* =  |
-| *a* $\mathbf{\cup}$ *b* *s.t.*                                        |
-| $\left( \mathbf{a}\mathbf{,}\mathbf{b} \right)$=                      |
-| ${\mathbf{argm                                                        |
-| }\mathbf{ax}}_{\left( \mathbf{i,j} \right)}\mathbf{A}_{\mathbf{i,j}}$ |
-| and add *c* to *T*.                                                   |
-|                                                                       |
-| 4\. *k=k-1*; update all sample labels of *a* and *b* to *c* in *Y.*   |
-|                                                                       |
-| Output:                                                               |
-|                                                                       |
-| The learned subtype hierarchy *T* and its associated multi-step       |
-| hierarchical classifiers                                              |
-| ${{\over                                                              |
-| line{\mathbf{f}}}_{\mathbf{.}}}^{\mathbf{(}\mathbf{.}\mathbf{)}}$*s.* |
-+-----------------------------------------------------------------------+
+ 1\. Train by cross-validation **k** One-vs-Rest classifiers $${\bar{f}_1}^{(k)}, \ldots, {\bar{f}_k}^{(k)}$$ using Lasso-Logistic regression.                                      
+
+2\. Compute the pairwise classification error, the confusion matrix $$\bar{C}_{ij}$$ and the symmetrized confusion matrix **A**:
+
+i. ${\bar{C}_{ij} = |{(x,y_i) \in X_{test}:argmax_r {\bar{f}_r}^{(k)} (x) =j}|$
+
+ii. $A = \frac{1}{2} ( \bar{C} + \bar{C}^T )$
+
+3\. Merge the two most similar subtypes to an internal subtype **c** =**a $$\cup$$ b** s.t.**(a,b)** = **$$argmax_{(i,j)}A_{i,j}$$** and add **c** to **T**.
+
+4\. k=k-1; update all sample labels of **a** and **b** to **c** in **Y**. 
+**Output:** 
+The learned subtype hierarchy **T** and its associated multi-step hierarchical classifiers $${\bar{f}\.}^{\.}$$ s.
+
+-----------------------------------------------------------------------
 
 The training framework is designed to build hierarchical classifiers by
 iteratively merging subtypes based on their classification similarity.
@@ -1465,6 +1432,7 @@ dataset description:** (a) The principles of DNA-level subtype
 classifier; (b) Distribution of the four intrinsic subtypes in the TCGA
 (n = 931) and METABRIC (n = 1134) breast cancer datasets (c) The
 conceptual design of UGES.
+![Figure 1](https://github.com/labxscut/UGES/blob/main/Figures/Figure_1.png)
 
 **Fig. 2. Evaluation of the classification strategies on DNA-level
 features:** (a) The self-learned classification hierarchy
@@ -1472,16 +1440,19 @@ features:** (a) The self-learned classification hierarchy
 ((B,H),(LA,LB)), (B,H,(LA,LB)), and (B,H,LA,LB); ROC and AUC of (c) all
 strategies with full DNA features; (d) the (B,(H,(LA,LB))) strategy with
 mutation, CNA, and methylation features.
+![Figure 2](https://github.com/labxscut/UGES/blob/main/Figures/Figure_2.png)
 
 **Fig. 3. UGES subtypes show improved clinical relevance:** (a) Alluvial
 plot and (b) Confusion matrix between UGES and PAM50 subtyping for the
 combined TCGA+METABRIC cohort; (c) Changes of p-values when switching
 from PAM50 to UGES subtypes; (d) Forest plot of multivariate model
 hazard ratios.
+![Figure 3](https://github.com/labxscut/UGES/blob/main/Figures/Figure_3.png)
 
 **Fig. 4. Heatmap of the 52 signature subtype-delineating alterations:**
 from top to bottom are heatmaps of signature (a) Mutations, (b) Copy
 Number Aberrations, and (c) Methylation features.
+![Figure 4](https://github.com/labxscut/UGES/blob/main/Figures/Figure_4.png)
 
     This work was supported by the National Science Foundation of
     China (12571529 to L.C. Xia; 62472180 to Y. Xiong), the Guangdong
