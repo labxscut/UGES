@@ -238,7 +238,7 @@ The subtype hierarchy: T=\{\}.
 
 2\. Compute the pairwise classification error, the confusion matrix $$\bar{C}_{ij}$$ and the symmetrized confusion matrix **A**:
 
-i. ${\bar{C}_{ij} = |{(x,y_i) \in X_{test}:argmax_r {\bar{f}_r}^{(k)} (x) =j}|$
+i. $\bar{C}_ {ij} = |  {(x,y_i)} \in X_{test}: argmax_r  {\bar{f}_r}^{(k)}(x) =j  |$ 
 
 ii. $A = \frac{1}{2} ( \bar{C} + \bar{C}^T )$
 
