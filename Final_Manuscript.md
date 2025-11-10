@@ -5,11 +5,9 @@ title: A unified genetic and epigenetic model to predict breast cancer
 ---
 
 Xintong Chang, Jiemin Xie, Hongyu Duan, Keyi Li, Xuemei Liu, Yunhui
-Xiong, Xiangqi Bai, Kaida Ning, Li C. Xia^\*^
+Xiong, Xiangqi Bai, Kaida Ning, Li C. Xia*
 
-^\*^Correspondence author: Li C. Xia (<lcxia@scut.edu.cn>)
-
-[^1]
+*Correspondence author: Li C. Xia (<lcxia@scut.edu.cn>)
 
 ***Abstract*--- Breast cancer subtyping presents a significant clinical
 and scientific challenge. The prevalent expression-based Prediction
@@ -39,7 +37,7 @@ early screening.**
 
 # I. INTRODUCTION
 
-[B]{.smallcaps}[REAST]{.smallcaps} cancer is a malignant, complex, and
+BREAST cancer is a malignant, complex, and
 highly heterogeneous tumor that overwhelmingly impacts women. Precise
 identification of the cancer's subtypes is crucial to optimize treatment
 and improve outcome for patients \[1\]. However, breast cancer subtyping
@@ -154,7 +152,7 @@ that potentially define breast cancer intrinsic subtypes.
 
 # II. Materials and Methods
 
-## A. Data collection and pre-processing {#a.-data-collection-and-pre-processing .list-paragraph}
+## A. Data collection and pre-processing 
 
 The Cancer Genome Atlas (**TCGA**) \[39\] and Molecular Taxonomy of
 Breast Cancer International Consortium (**METABRIC**) \[34\] datasets,
@@ -183,10 +181,10 @@ function from the *impute* R package \[41, 42\]. This resulted in the
 inclusion of 50,831 gene-level DNA features, including 16,770 mutations,
 25,594 CNAs, and 8,467 methylation features.
 
-## B. Lasso-Logistic regression {#b.-lasso-logistic-regression .list-paragraph}
+## B. Lasso-Logistic regression
 
 We applied the Lasso-Logistic regression model using the *glmnet*
-package in R \[43\]) with 10-fold cross-validation for classification.
+package in R \[43\] with 10-fold cross-validation for classification.
 The Least Absolute Shrinkage and Selection Operator (**Lasso**) handles
 high-dimensional, multi-modal data while avoiding overfitting by
 regularizing non-informative features to zero \[44\]. The model's single
@@ -197,7 +195,7 @@ model with the highest accuracy.
 To describe this multinomial model, we used the following annotations.
 Suppose the response variable has $K$ levels
 $G = \{ 1,\ 2,\ \ldots,\ K\}$ and each sample $x_{i}$ in our study has
-$m = \ $`<!-- -->`{=html}50,831 features, i.e.,
+m = 50,831 features, i.e.,
 $x_{i} = \{ x_{i,1},\ x_{i,2},\ldots,x_{i,m}\}$, then we model:
 
 $$\Pr\left( G = k \middle| X = x \right) = \frac{e^{\beta_{0k} + \beta_{k}^{T}x}}{\sum_{l = 1}^{K}e^{\beta_{0l} + \beta_{l}^{T}x}}\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (1)$$
@@ -206,24 +204,33 @@ Let $Y$ be the $N \times K$ indicator response matrix, with elements
 $y_{il} = I(g_{i} = l)$. Then the Lasso elastic net penalized negative
 log-likelihood function becomes:
 
-$$\ \ \ \ \ \ \ \ l\left( \left\{ \beta_{0k},\beta_{k} \right\}_{1}^{K} \right) = - \left\lbrack \frac{1}{N}\sum_{i = 1}^{N}{(\sum_{k = 1}^{K}{y_{il}\left( \beta_{0k} + x_{i}^{T}\beta_{k} \right)} - log(\sum_{l = 1}^{K}e^{\beta_{0l} + x_{i}^{T}\beta_{l}}))} \right\rbrack + \lambda\sum_{j = 1}^{p}{|\beta_{j}|}\ \ \ \ \ \ (2)$$
+$$
+l(\{\beta_{0k}, \beta_k\}_1^K) =-[\frac{1}{N}\sum_{i = 1}^{N}(\sum_{i = 1}^{K}y_{il}(\beta_{0k}+x_i^T\beta_k)-log(\sum_{i = 1}^{K}e^\beta_{0l}+x_i^T\beta_l))]+\lambda\sum_{j = 1}^{p}|\beta_j| \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ (2)$$
+
 
 where $\beta$ is a $p \times K$ matrix of coefficients, $\beta_{k}$ is
 the $k$-th column (for outcome category $k$), $\beta_{j}$ the $j$-th row
 (vector of $K$ coefficients for variable $j$), $\lambda$ is the penalty
 parameter, and *N* is the total number of samples.
 
-## C. Hierarchical learning algorithm {#c.-hierarchical-learning-algorithm .list-paragraph}
+## C. Hierarchical learning algorithm
 
 We extended the hierarchical learning algorithm proposed by Bengio et
 al. \[45\] to construct the optimal multi-step classification training
 framework (see **Algorithm 1**).
 
-+-----------------------------------------------------------------------+
-| Algorithm 1: the UGES training framework                              |
-+=======================================================================+
-| Input:                                                                |
-|                                                                       |
+-------------------------------------------------------------------------
+ Algorithm 1: the UGES training framework                              
+-------------------------------------------------------------------------
+**Input:**
+$$
+\mathbf{X_{\text{train}}} = (X_1, X_2, \dots, X_n),\quad
+\mathbf{Y_{\text{train}}} = (Y_1, Y_2, \dots, Y_n),\quad
+k = 4
+$$
+The subtype hierarchy: T=\{\}.
+**Repeat until k=1:**
+
 | $\mathb                                                               |
 | f{X}_{\mathbf{train}}\mathbf{= (}\mathbf{X}_{\mathbf{1}}\mathbf{,}\ma |
 | thbf{X}_{\mathbf{2}}\mathbf{\ldots}\mathbf{X}_{\mathbf{n}}\mathbf{)}$ |
@@ -313,8 +320,7 @@ closely related subtypes, but also reduces the complexity of the
 classification task, making it more interpretable and computationally
 efficient.
 
-## D. Relative importance {#d.-relative-importance .list-paragraph}
-
+## D. Relative importance 
 Genetic and epigenetic determinants of intrinsic subtypes were
 identified by the Lasso-Logistic regression, enabling the quantification
 of effects for all three types of DNA alterations. Lasso-Logistic
@@ -339,7 +345,7 @@ where $S_{i} = \sum_{i\  \in \ f}^{}\left| c_{i} \right|$ is the sum of
 all absolute regression coefficients for a certain DNA alteration class
 and $S = \ \sum_{f}^{}S_{f}$.
 
-## E. Survival analysis {#e.-survival-analysis .list-paragraph}
+## E. Survival analysis
 
 Univariate and multivariate survival analyses were performed in R using
 the *survival* and *survminer* packages, with Overall Survival (OS) as
@@ -352,8 +358,7 @@ using the Benjamini-Hochberg (BH) method to control for False Discovery
 Rate, with significance determined based on a BH-corrected threshold of
 0.05.
 
-## F. Differential analyses {#f.-differential-analyses .list-paragraph}
-
+## F. Differential analyses
 Differential analyses were conducted in R on a set of 112 DNA alteration
 features, including the top 10% of alterations selected by
 sub-classifier. For mutation data, the Chi-Square Test was applied using
@@ -366,7 +371,7 @@ was \< 0.01. All the statistical tests were two-sided.
 
 # III. Results
 
-## A. Cohort characteristics and data separation {#a.-cohort-characteristics-and-data-separation .list-paragraph}
+## A. Cohort characteristics and data separation
 
 We downloaded and analyzed DNA-level and clinical data for a total of
 2065 samples, including 931 TCGA samples and 1134 METABRIC samples
@@ -401,7 +406,7 @@ Characteristic (**ROC**) curves and Area Under Curve (**AUC**) scores as
 performance evaluation metrics. For technical details of data
 processing, see **Materials and Methods**.
 
-## B. UGES \-- a sufficient and accurate DNA-level classifier  {#b.-uges----a-sufficient-and-accurate-dna-level-classifier .list-paragraph}
+## B. UGES \-- a sufficient and accurate DNA-level classifier
 
 We first developed a sufficient yet trimmed DNA-level classifier for
 distinguishing intrinsic subtypes. One drawback of multi-omics subtyping
@@ -541,7 +546,7 @@ of the UGES model's DNA-based design, supporting its potential as a
 robust and effective solution for clinical applications such as liquid
 biopsy.
 
-## C. methylation has the main effect in defining subtypes {#c.-methylation-has-the-main-effect-in-defining-subtypes .list-paragraph}
+## C. methylation has the main effect in defining subtypes 
 
 We studied the relative importance of each DNA feature based on
 UGES-defined intrinsic subtypes. Biologically, genetic and epigenetic
@@ -585,7 +590,7 @@ sub-classifier but the lowest in the other sub-classifiers, suggesting
 that mutations were crucial in distinguishing LumA and LumB subtypes, as
 reported by previous research \[63\].
 
-## D. UGES-defined subtypes show improved clinical relevance {#d.-uges-defined-subtypes-show-improved-clinical-relevance .list-paragraph}
+## D. UGES-defined subtypes show improved clinical relevance
 
 We found that UGES subtypes were substantially different from PAM50
 subtypes. The alluvial plot and the confusion matrix showed that subtype
@@ -638,7 +643,7 @@ prognosis of LumA patients, as reported by others \[64\]. These findings
 proved that UGES subtypes yielded more clinically distinguishable
 patient subgroups, influential for more precise clinical management.
 
-## E. UGES identified signature subtype-specific alterations {#e.-uges-identified-signature-subtype-specific-alterations .list-paragraph}
+## E. UGES identified signature subtype-specific alterations
 
 Unraveling genetic and epigenetic heterogeneity and identifying
 subtype-specific markers of breast cancer are key to developing targeted
@@ -901,8 +906,6 @@ The TCGA and METABRIC datasets are available in GDC
 (<https://gdc.cancer.gov/about-data/publications/pancanatlas>) and
 cBioPortal (<http://www.cbioportal.org/>). Analytical codes are provided
 at <https://github.com/labxscut/UGES>.
-
-[References]{.smallcaps}
 
 \[1\] X. F. Dai, T. Li, Z. H. Bai, Y. K. Yang, X. X. Liu, J. L. Zhan,
 and B. Z. Shi, "Breast cancer intrinsic subtype classification, clinical
@@ -1480,203 +1483,7 @@ hazard ratios.
 from top to bottom are heatmaps of signature (a) Mutations, (b) Copy
 Number Aberrations, and (c) Methylation features.
 
-  -------------------------------------------------------------------------------------------------------------------------------
-  **Data                                                                                                                       
-  description**                                                                                                                
-  ------------------- ------------- ----------------- ----------- ---------- ------------- ------------- --------------------- --
-  **Cohort**                        **Number of                              **Ending                                          
-                                    patients                                 events^1^**                                       
-                                    (missingness)**                                                                            
-
-  TCGA                              931 (5)                                  122                                               
-
-  METABRIC                          1134 (309)                               487                                               
-
-  Combined                          2065 (314)                               609                                               
-
-  **Multivariate cox                                                                                                           
-  regression                                                                                                                   
-  results**                                                                                                                    
-
-  **Clinical                        **Dataset**       **Count (%) **Hazard   **95% CI**    **p-value**   **Significance^2^**   
-  characteristics**                                   / Mean      Ratio**                                                      
-                                                      (Range)**                                                                
-
-  Age                 At diagnosis  TCGA              58.4        1.038      (1.024,       2.3e-07       \*\*\*                
-                                                      (26-90)                1.053)                                            
-
-                                    METABRIC          61.6        1.041      (1.033,       \< 2e-16      \*\*\*                
-                                                      (21-96)                1.050)                                            
-
-                                    Combined          60.1        1.038      (1.031,       \< 2e-16      \*\*\*                
-                                                      (21-96)                1.045)                                            
-
-  ER status           Negative      METABRIC          218         \-         \-            \-            \-                    
-                      (Reference)                     (19.22%)                                                                 
-
-                      Positive                        916         0.749      (0.563,       0.0474        \*                    
-                                                      (80.78%)               0.997)                                            
-
-  PR status           Negative      METABRIC          506         \-         \-            \-            \-                    
-                      (Reference)                     (44.62%)                                                                 
-
-                      Positive                        628         0.917      (0.737,       0.4340        n.s.                  
-                                                      (55.38%)               1.140)                                            
-
-  Her2 status         Negative      METABRIC          981         \-         \-            \-            \-                    
-                      (Reference)                     (86.51%)                                                                 
-
-                      Positive                        153         1.643      (1.244,       0.0005        \*\*\*                
-                                                      (13.49%)               2.169)                                            
-
-  ^1^An ending event                                                                                                           
-  is defined as a                                                                                                              
-  patient death or                                                                                                             
-  data censor.^\                                                                                                               
-  2^Statistical                                                                                                                
-  significance is                                                                                                              
-  based on the fitted                                                                                                          
-  multivariate cox                                                                                                             
-  model. n.s.: not                                                                                                             
-  significant, \*p \<                                                                                                          
-  0.05, \*\*p \<                                                                                                               
-  0.01, \*\*\*p \<                                                                                                             
-  0.001.                                                                                                                       
-  -------------------------------------------------------------------------------------------------------------------------------
-
-**Table 1:** Clinical characteristics and multivariate cox regression
-results for the cohorts.
-
-+-----------------+--------------------------+-------------------------+
-| **S             | **DNA alteration (#      | **Relative importance** |
-| ub-classifier** | of)**                    |                         |
-+=================+==========================+=========================+
-| *               | Mutation (48)            | 12.68%                  |
-| B-vs-(H,LA,LB)* |                          |                         |
-|                 |                          |                         |
-| *236 DNA        |                          |                         |
-| features*       |                          |                         |
-+-----------------+--------------------------+-------------------------+
-|                 | CNA (91)                 | 33.35%                  |
-+-----------------+--------------------------+-------------------------+
-|                 | **Methylation (97)**     | **53.97%**              |
-+-----------------+--------------------------+-------------------------+
-| *H-vs-(LA,LB)*  | Mutation (105)           | 19.78%                  |
-|                 |                          |                         |
-| *367 DNA        |                          |                         |
-| features*       |                          |                         |
-+-----------------+--------------------------+-------------------------+
-|                 | CNA (98)                 | 25.15%                  |
-+-----------------+--------------------------+-------------------------+
-|                 | **Methylation (164)**    | **55.08%**              |
-+-----------------+--------------------------+-------------------------+
-| *LA-vs-LB*      | Mutation (227)           | 28.63%                  |
-|                 |                          |                         |
-| *530 DNA        |                          |                         |
-| features*       |                          |                         |
-+-----------------+--------------------------+-------------------------+
-|                 | CNA (100)                | 19.76%                  |
-+-----------------+--------------------------+-------------------------+
-|                 | **Methylation (203)**    | **51.62%**              |
-+-----------------+--------------------------+-------------------------+
-
-**Table 2:** Relative importance of DNA alteration features in UGES
-sub-classifiers.
-
-+--------+--------+-----------+--------+---------+---------+---------+
-|        | **     |           | ***H-v |         | ***LA-v |         |
-|        | *B-vs- |           | s-(LA, |         | s-LB*** |         |
-|        | (H,LA, |           | LB)*** |         |         |         |
-|        | LB)*** |           |        |         |         |         |
-+========+========+===========+========+=========+=========+=========+
-|        | **B    | **        | **H    | **      | **LA    | **LB    |
-|        | ma     | (H,LA,LB) | ma     | (LA,LB) | m       | m       |
-|        | rker** | marker**  | rker** | m       | arker** | arker** |
-|        |        |           |        | arker** |         |         |
-+--------+--------+-----------+--------+---------+---------+---------+
-| **Muta | TP53   | PIK3CA    | TP53   | /       | /       | ATXN1   |
-| tion** |        |           |        |         |         |         |
-|        |        |           | GPR124 |         |         | CP      |
-|        |        |           |        |         |         |         |
-|        |        |           | HRAS   |         |         |         |
-|        |        |           |        |         |         |         |
-|        |        |           | SETD2  |         |         |         |
-|        |        |           |        |         |         |         |
-|        |        |           | ERBB2  |         |         |         |
-|        |        |           |        |         |         |         |
-|        |        |           | PNN    |         |         |         |
-+--------+--------+-----------+--------+---------+---------+---------+
-| *      | BCY    | M         | PG     | SL      | MNX1(-) | K       |
-| *CNA** | RN1(+) | IR4728(+) | AP3(+) | C4A1(-) |         | CNJ2(+) |
-|        |        |           |        |         | DNA     |         |
-|        | P      | M         | MIR5   | PLA     | JC11(-) | FA      |
-|        | GM3(+) | IR3677(+) | 684(-) | C8L1(+) |         | M49B(+) |
-|        |        |           |        |         | ZN      |         |
-|        |        | USP32(+)  |        | PSM     | HIT6(-) | TMC8(+) |
-|        |        |           |        | C3IP(-) |         |         |
-|        |        |           |        |         | ZN      |         |
-|        |        |           |        | SP      | F267(+) |         |
-|        |        |           |        | RR2B(+) |         |         |
-|        |        |           |        |         | C17or   |         |
-|        |        |           |        |         | f105(-) |         |
-|        |        |           |        |         |         |         |
-|        |        |           |        |         | D       |         |
-|        |        |           |        |         | HDDS(-) |         |
-+--------+--------+-----------+--------+---------+---------+---------+
-| **M    | A      | KCNH8(+)  | C      | L       | INS(+)  | PR      |
-| ethyla | IRE(+) |           | YBA(+) | AMB3(+) |         | DM14(+) |
-| tion** |        | DNM3(+)   |        |         | HO      |         |
-|        | PRS    |           |        |         | XA11(+) | AQP1(+) |
-|        | S41(+) | UCN(+)    |        |         |         |         |
-|        |        |           |        |         | K       | PENK(+) |
-|        |        | PRTN3(+)  |        |         | RT78(+) |         |
-|        |        |           |        |         |         | CC      |
-|        |        |           |        |         | P       | DC65(+) |
-|        |        |           |        |         | DZD4(+) |         |
-|        |        |           |        |         |         | H       |
-|        |        |           |        |         | T       | TR1B(+) |
-|        |        |           |        |         | NNT3(-) |         |
-|        |        |           |        |         |         | A       |
-|        |        |           |        |         | PLE     | DCY4(+) |
-|        |        |           |        |         | KHA6(+) |         |
-|        |        |           |        |         |         | C       |
-|        |        |           |        |         | LINC0   | RYAB(+) |
-|        |        |           |        |         | 0574(+) |         |
-|        |        |           |        |         |         |         |
-|        |        |           |        |         | NTF3(-) |         |
-+--------+--------+-----------+--------+---------+---------+---------+
-| Note:  |        |           |        |         |         |         |
-| (+)    |        |           |        |         |         |         |
-| d      |        |           |        |         |         |         |
-| enotes |        |           |        |         |         |         |
-| copy   |        |           |        |         |         |         |
-| number |        |           |        |         |         |         |
-| a      |        |           |        |         |         |         |
-| mplifi |        |           |        |         |         |         |
-| cation |        |           |        |         |         |         |
-| or     |        |           |        |         |         |         |
-| hyper  |        |           |        |         |         |         |
-| methyl |        |           |        |         |         |         |
-| ation, |        |           |        |         |         |         |
-| (-)    |        |           |        |         |         |         |
-| d      |        |           |        |         |         |         |
-| enotes |        |           |        |         |         |         |
-| copy   |        |           |        |         |         |         |
-| number |        |           |        |         |         |         |
-| de     |        |           |        |         |         |         |
-| letion |        |           |        |         |         |         |
-| or     |        |           |        |         |         |         |
-| hypo   |        |           |        |         |         |         |
-| methyl |        |           |        |         |         |         |
-| ation. |        |           |        |         |         |         |
-+--------+--------+-----------+--------+---------+---------+---------+
-|        |        |           |        |         |         |         |
-+--------+--------+-----------+--------+---------+---------+---------+
-
-**Table 3:** 52 signature subtype-delineating alterations for breast
-cancer that have been identified in differential analyses.
-
-[^1]: This work was supported by the National Science Foundation of
+    This work was supported by the National Science Foundation of
     China (12571529 to L.C. Xia; 62472180 to Y. Xiong), the Guangdong
     Basic and Applied Basic Research Foundation (2022A1515-011426,
     2024A1515-010699 to L.C. Xia), and the Major Key Project of
@@ -1700,4 +1507,4 @@ cancer that have been identified in differential analyses.
 
     Li C. Xia is at the Department of Statistics and Financial
     Mathematics, School of Mathematics, South China University of
-    Technology, Guangzhou 510000, China (e-mail: <lcxia@scut.edu.cn>).
+    Technology, Guangzhou 510000, China (e-mail: lcxia@scut.edu.cn).
